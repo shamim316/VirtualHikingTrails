@@ -141,41 +141,58 @@ if (args.weather) {
 }
 
 if ('water' in args) {
-  // Stand on the bank of the liveliest water within a few kilometres, facing
-  // it. Water is the one subsystem you cannot judge from a forest viewpoint.
+  // Stand on the bank of the nearest interesting water, looking at it. Water
+  // is the one subsystem a forest viewpoint tells you nothing about.
   const where = await page.evaluate((wantFall) => {
     const engine = window.hiking;
     const field = engine.terrain.field;
+
     let best = null;
-    for (let i = 0; i < 9000; i++) {
+    for (let i = 0; i < 12000; i++) {
       const angle = i * 2.39996;
-      const radius = Math.sqrt(i) * 22;
+      const radius = Math.sqrt(i) * 18;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
       const s = field.sample(x, z);
-      if (s.waterHeight <= s.height) continue;
+      if (s.waterHeight <= s.height + 0.05) continue;
       // A waterfall is fast water on steep ground; a tarn is the opposite.
+      // Default: open standing water, which is what shows the shader. A
+      // stream in a narrow cut is mostly bank from anywhere you can stand.
+      const depth = s.waterHeight - s.height;
       const score = wantFall
-        ? s.riverT * 3 + s.slope * 6 - radius * 0.0005
-        : s.riverT * 2 + (1 - s.slope) * 2 - radius * 0.0008;
+        ? s.riverT * 2 + s.slope * 7 - radius * 0.0006
+        : (1 - s.slope) * 4 + Math.min(depth, 4) - s.riverT * 2 - radius * 0.0012;
       if (!best || score > best.score) best = { x, z, score, slope: s.slope, riverT: s.riverT };
     }
     if (!best) return null;
-    // Step back onto dry land so the camera isn't underwater, then look at it.
-    let px = best.x;
-    let pz = best.z;
-    for (let step = 0; step < 40; step++) {
-      const h = field.height(px, pz);
-      if (field.waterHeight(px, pz) <= h + 0.1) break;
-      px += 1.5;
-      pz += 1.0;
+
+    // Nearest dry bank, searched outward in rings rather than along one
+    // arbitrary diagonal — a stream is narrow in exactly one direction.
+    let bank = null;
+    // Start well back: standing at the very edge of the water fills the frame
+    // with bank. Ten metres out is where you would actually stop to look.
+    for (let radius = 10; radius <= 90 && !bank; radius += 4) {
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2;
+        const px = best.x + Math.cos(angle) * radius;
+        const pz = best.z + Math.sin(angle) * radius;
+        const h = field.height(px, pz);
+        // Dry, and standing a little above the surface so the bank is in shot.
+        if (field.waterHeight(px, pz) > h - 0.4) continue;
+        if (field.normal(px, pz, 1.2).y < 0.86) continue;
+        bank = { px, pz, h };
+        break;
+      }
     }
-    const yaw = Math.atan2(-(best.x - px), -(best.z - pz));
-    engine.player.placeAt(px, pz, yaw);
-    return { ...best, px, pz };
+    if (!bank) return null;
+
+    const yaw = Math.atan2(-(best.x - bank.px), -(best.z - bank.pz));
+    engine.player.placeAt(bank.px, bank.pz, yaw);
+    return { ...best, ...bank };
   }, 'waterfall' in args);
   console.log(where
-    ? `water at (${where.px.toFixed(0)}, ${where.pz.toFixed(0)}) riverT=${where.riverT.toFixed(2)} slope=${where.slope.toFixed(2)}`
+    ? `bank at (${where.px.toFixed(0)}, ${where.pz.toFixed(0)}) ${where.h.toFixed(0)}m, ` +
+      `water riverT=${where.riverT.toFixed(2)} slope=${where.slope.toFixed(2)}`
     : 'no water found');
 }
 

@@ -273,6 +273,12 @@ export class Terrain {
       wg.setAttribute('flow', new THREE.BufferAttribute(data.water.flow, 3));
       wg.setAttribute('waterParams', new THREE.BufferAttribute(data.water.params, 3));
       wg.setIndex(new THREE.BufferAttribute(data.water.indices, 1));
+      // Without this the water has no normal attribute at all, three hands the
+      // shader a zero vector, and every lake and stream in the world renders
+      // pure black — no diffuse, no sky reflection, nothing. It costs little
+      // and it is exact for the real surface, so a waterfall gets the steep
+      // near-vertical normal its shading needs rather than a flat (0,1,0).
+      wg.computeVertexNormals();
       wg.computeBoundingSphere();
       water = new THREE.Mesh(wg, this.waterMaterial);
       water.position.set(data.originX, 0, data.originZ);
