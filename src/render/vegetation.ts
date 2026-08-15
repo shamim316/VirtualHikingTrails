@@ -41,23 +41,42 @@ import type { QualitySettings } from '../core/quality';
 const REBUILD_DISTANCE = 6;
 
 /**
- * Billboard impostors are switched off.
+ * Convert quantized vertex attributes to plain floats.
  *
- * The machinery is here and the atlases bake correctly — the alpha channel
- * comes out cleanly bimodal — but the cutout fails at draw time and every
- * distant tree renders as a solid rectangle with a picture of a tree in it,
- * which is far worse than having no distant trees at all. Removing the
- * impostor meshes from the scene graph makes the walls disappear, which is how
- * this was pinned down. Until the sampling is fixed, trees are drawn as real
- * geometry within a radius the triangle budget can actually afford.
+ * The asset pipeline packs positions with `KHR_mesh_quantization`, so they
+ * arrive as *normalized Int16Array* — a 16-bit lattice plus a decode transform
+ * on the node. That is exactly what you want on the wire, and a trap the moment
+ * you transform the geometry: `applyMatrix4`, `translate` and `scale` all write
+ * their results straight back into the same integer array. Normalising a
+ * nineteen-metre fir to unit height multiplies every coordinate by 1/19, and on
+ * a 16-bit grid the whole tree collapses onto a handful of integer steps — which
+ * is why the forest was drawing as hollow cages of axis-aligned bars while the
+ * very same file rendered perfectly when loaded and left untransformed.
+ *
+ * Widening to Float32 first costs a few hundred kilobytes per model in memory
+ * and makes every later transform exact.
  */
-const IMPOSTORS_ENABLED = false;
+function dequantize(geometry: THREE.BufferGeometry): void {
+  for (const name of Object.keys(geometry.attributes)) {
+    const attribute = geometry.attributes[name] as THREE.BufferAttribute;
+    if (attribute.array instanceof Float32Array && !attribute.normalized) continue;
+
+    const widened = new Float32Array(attribute.count * attribute.itemSize);
+    for (let i = 0; i < attribute.count; i++) {
+      for (let c = 0; c < attribute.itemSize; c++) {
+        // getComponent applies the normalized decode for us.
+        widened[i * attribute.itemSize + c] = attribute.getComponent(i, c);
+      }
+    }
+    geometry.setAttribute(name, new THREE.BufferAttribute(widened, attribute.itemSize, false));
+  }
+}
+
+const IMPOSTORS_ENABLED = true;
 
 /** Per-group draw radius as a multiple of the tier's vegetation distance. */
 const GROUP_RANGE: Record<string, number> = {
-  // Without impostors this is bounded by arithmetic, not by taste: a fir is
-  // 150k triangles, so a few hundred of them is the whole frame budget.
-  canopy: 0.4,
+  canopy: 3.4,     // trees have to be visible across a valley
   deadwood: 1.0,
   understory: 1.0,
   rock: 1.6,
@@ -225,6 +244,7 @@ export class Vegetation {
           const meshes: THREE.InstancedMesh[] = [];
           for (const source of sources) {
             const geometry = source.geometry.clone();
+            dequantize(geometry);
             geometry.applyMatrix4(source.matrixWorld);
             geometry.translate(-cx, -bounds.min.y, -cz);
             geometry.scale(1 / height, 1 / height, 1 / height);
