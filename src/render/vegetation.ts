@@ -74,13 +74,21 @@ function dequantize(geometry: THREE.BufferGeometry): void {
 
 const IMPOSTORS_ENABLED = true;
 
-/** Per-group draw radius as a multiple of the tier's vegetation distance. */
+/**
+ * Per-group draw radius as a multiple of the tier's vegetation distance.
+ *
+ * These are triangle budgets in disguise. Undergrowth is the expensive group,
+ * not the trees: a fern is three thousand triangles and there are thousands of
+ * them per hectare, so drawing them out to 135m costs forty million triangles
+ * for detail nobody can resolve past about forty. Trees reach much further
+ * because past their mesh range they cost two triangles each as billboards.
+ */
 const GROUP_RANGE: Record<string, number> = {
   canopy: 3.4,     // trees have to be visible across a valley
-  deadwood: 1.0,
-  understory: 1.0,
-  rock: 1.6,
-  flower: 0.75,
+  rock: 0.9,
+  deadwood: 0.55,
+  understory: 0.36,
+  flower: 0.3,
   ground: 0.55,    // grass, only underfoot
 };
 
@@ -630,9 +638,15 @@ export class Vegetation {
       // Where real geometry gives way to billboards. Trees stay solid for the
       // distance you would actually walk among them; anything without an
       // impostor is drawn as a mesh all the way out.
-      const meshRange = renderer.impostorMesh
-        ? Math.min(range, settings.vegetationDistance * 0.85)
-        : range;
+      // Where real geometry gives way to billboards.
+      //
+      // A hero fir is 150k triangles, so this radius is set by arithmetic:
+      // every ten metres added multiplies the tree count by the area, and at
+      // 115m the canopy alone was costing ninety million triangles a frame.
+      // Forty metres keeps a few hundred real trees around you — everything
+      // you could actually walk up to and touch — and hands the rest to the
+      // impostors, which cost two triangles each.
+      const meshRange = renderer.impostorMesh ? Math.min(range, 40) : range;
       renderer.meshRange = meshRange;
 
       const impostorMaterial = renderer.impostorMesh?.material as THREE.ShaderMaterial | undefined;

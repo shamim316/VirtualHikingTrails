@@ -142,7 +142,7 @@ export const SPECIES: Species[] = [
     note: 'Most of these will not make it. A hectare of forest floor can hold thousands; a handful reach the canopy.',
     habitat: {
       biomes: FOREST_BIOMES, altitude: [300, 660], maxSlope: 0.6,
-      moisture: 0.35, canopy: 0.95, density: 900, clumping: 0.7,
+      moisture: 0.35, canopy: 0.95, density: 1500, clumping: 0.6,
     },
   },
 
@@ -224,7 +224,7 @@ export const SPECIES: Species[] = [
     note: 'Unfurls in spring as a tight spiral — a fiddlehead — and dies back at the first hard frost. Ferns were here a hundred million years before the first flower.',
     habitat: {
       biomes: [Biome.Forest, Biome.Conifer, Biome.Riverbank], altitude: [190, 560], maxSlope: 0.5,
-      moisture: 0.85, canopy: 0.8, density: 1400, clumping: 0.75,
+      moisture: 0.85, canopy: 0.8, density: 2600, clumping: 0.6,
     },
   },
   {
@@ -237,7 +237,7 @@ export const SPECIES: Species[] = [
     note: 'Carpets acid soil under conifers. The berries stain your fingers purple and ripen from the bottom of the bush upward.',
     habitat: {
       biomes: FOREST_BIOMES, altitude: [280, 640], maxSlope: 0.5,
-      moisture: 0.45, canopy: 0.75, density: 1600, clumping: 0.8,
+      moisture: 0.45, canopy: 0.75, density: 3000, clumping: 0.65,
     },
   },
   {
@@ -263,7 +263,7 @@ export const SPECIES: Species[] = [
     note: 'Turns whole hillsides purple for a few weeks in late summer. Each plant may carry a million flowers, and hardly any of them are wasted — heather honey is nearly solid.',
     habitat: {
       biomes: [Biome.Meadow, Biome.Conifer], altitude: [300, 660], maxSlope: 0.5,
-      moisture: -0.1, canopy: -0.5, density: 1800, clumping: 0.85,
+      moisture: -0.1, canopy: -0.5, density: 3000, clumping: 0.7,
     },
   },
   {
@@ -276,7 +276,7 @@ export const SPECIES: Species[] = [
     note: 'Arches over and roots wherever the tip touches ground, walking itself across a clearing a metre a year.',
     habitat: {
       biomes: [Biome.Forest, Biome.Meadow, Biome.Riverbank], altitude: [190, 460], maxSlope: 0.45,
-      moisture: 0.5, canopy: 0.3, density: 900, clumping: 0.7,
+      moisture: 0.5, canopy: 0.3, density: 1600, clumping: 0.6,
     },
   },
   {
@@ -302,7 +302,7 @@ export const SPECIES: Species[] = [
     note: 'Spreads by runners into a dense evergreen mat that almost nothing else grows through.',
     habitat: {
       biomes: [Biome.Forest], altitude: [190, 420], maxSlope: 0.4,
-      moisture: 0.6, canopy: 0.85, density: 1300, clumping: 0.85,
+      moisture: 0.6, canopy: 0.85, density: 2400, clumping: 0.7,
     },
   },
   {
@@ -315,7 +315,7 @@ export const SPECIES: Species[] = [
     note: 'Folds its three heart-shaped leaves down at dusk and in heavy rain, and opens them again by morning. Tastes sharply of apple peel.',
     habitat: {
       biomes: FOREST_BIOMES, altitude: [200, 520], maxSlope: 0.45,
-      moisture: 0.8, canopy: 0.95, density: 1700, clumping: 0.8,
+      moisture: 0.8, canopy: 0.95, density: 3200, clumping: 0.65,
     },
   },
 
@@ -330,7 +330,7 @@ export const SPECIES: Species[] = [
     note: 'Has no roots and no way to move water internally — it simply soaks up whatever lands on it and dries out completely between rains without dying.',
     habitat: {
       biomes: [Biome.Forest, Biome.Conifer, Biome.Riverbank], altitude: [190, 580], maxSlope: 0.55,
-      moisture: 0.9, canopy: 0.9, density: 2200, clumping: 0.85,
+      moisture: 0.9, canopy: 0.9, density: 3800, clumping: 0.7,
     },
   },
   {
@@ -343,7 +343,7 @@ export const SPECIES: Species[] = [
     note: 'Grows in hard tussocks that survive being grazed, trampled and waterlogged. In low sun the flower heads turn the whole meadow bronze.',
     habitat: {
       biomes: ALL_GROWABLE, altitude: [190, 620], maxSlope: 0.5,
-      moisture: 0.5, canopy: -0.2, density: 2600, clumping: 0.6,
+      moisture: 0.5, canopy: -0.2, density: 4200, clumping: 0.5,
     },
   },
   {
@@ -356,7 +356,7 @@ export const SPECIES: Species[] = [
     note: 'The ordinary grass of upland pasture, and the reason a meadow sounds different from a wood when the wind crosses it.',
     habitat: {
       biomes: OPEN_BIOMES, altitude: [190, 600], maxSlope: 0.45,
-      moisture: 0.3, canopy: -0.6, density: 3000, clumping: 0.4,
+      moisture: 0.3, canopy: -0.6, density: 5000, clumping: 0.35,
     },
   },
   {
@@ -369,7 +369,7 @@ export const SPECIES: Species[] = [
     note: 'Fine enough that a whole hillside of it moves like water when a gust crosses.',
     habitat: {
       biomes: OPEN_BIOMES, altitude: [220, 640], maxSlope: 0.5,
-      moisture: 0.1, canopy: -0.7, density: 3200, clumping: 0.35,
+      moisture: 0.1, canopy: -0.7, density: 5200, clumping: 0.3,
     },
   },
 
@@ -477,7 +477,7 @@ export const SPECIES: Species[] = [
     note: 'Carried here by ice and dropped where the ice stopped. Often a completely different rock from the ground it sits on.',
     habitat: {
       biomes: ALL_GROWABLE, altitude: [190, 800], maxSlope: 0.55,
-      moisture: 0, canopy: 0, density: 120, clumping: 0.5,
+      moisture: 0, canopy: 0, density: 34, clumping: 0.55,
     },
   },
   {
@@ -490,7 +490,7 @@ export const SPECIES: Species[] = [
     note: 'Frost does the work: water gets into a crack, freezes, expands, and over enough winters the rock comes apart along its own grain.',
     habitat: {
       biomes: ALL_GROWABLE, altitude: [190, 850], maxSlope: 0.6,
-      moisture: 0, canopy: 0, density: 500, clumping: 0.45,
+      moisture: 0, canopy: 0, density: 120, clumping: 0.5,
     },
   },
   {
@@ -503,7 +503,7 @@ export const SPECIES: Species[] = [
     note: '',
     habitat: {
       biomes: ALL_GROWABLE, altitude: [190, 850], maxSlope: 0.6,
-      moisture: 0, canopy: 0, density: 450, clumping: 0.45,
+      moisture: 0, canopy: 0, density: 110, clumping: 0.5,
     },
   },
   {
@@ -516,7 +516,7 @@ export const SPECIES: Species[] = [
     note: 'Moss takes the north face first, where the sun never quite dries it out. It is a rough compass if you have nothing better.',
     habitat: {
       biomes: [Biome.Forest, Biome.Conifer, Biome.Riverbank], altitude: [190, 560], maxSlope: 0.55,
-      moisture: 0.85, canopy: 0.7, density: 380, clumping: 0.6,
+      moisture: 0.85, canopy: 0.7, density: 110, clumping: 0.6,
     },
   },
   {
@@ -529,7 +529,7 @@ export const SPECIES: Species[] = [
     note: '',
     habitat: {
       biomes: [Biome.Meadow, Biome.Scree], altitude: [300, 850], maxSlope: 0.6,
-      moisture: -0.5, canopy: -0.4, density: 260, clumping: 0.55,
+      moisture: -0.5, canopy: -0.4, density: 70, clumping: 0.6,
     },
   },
   {
@@ -542,7 +542,7 @@ export const SPECIES: Species[] = [
     note: '',
     habitat: {
       biomes: [Biome.Scree, Biome.Meadow], altitude: [380, 880], maxSlope: 0.6,
-      moisture: -0.5, canopy: -0.5, density: 300, clumping: 0.55,
+      moisture: -0.5, canopy: -0.5, density: 80, clumping: 0.6,
     },
   },
   {
@@ -555,7 +555,7 @@ export const SPECIES: Species[] = [
     note: '',
     habitat: {
       biomes: ALL_GROWABLE, altitude: [190, 900], maxSlope: 0.65,
-      moisture: 0, canopy: 0, density: 1400, clumping: 0.4,
+      moisture: 0, canopy: 0, density: 320, clumping: 0.45,
     },
   },
 ];

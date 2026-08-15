@@ -147,13 +147,18 @@ function buildCell(req: ScatterRequest): { msg: ScatterReady; transfer: Transfer
 
       if (fitness <= 0.02) continue;
 
-      // Clumping: accept only where this species' own drift field is high.
+      // Clumping: prefer places where this species' own drift field is high.
+      //
+      // Rejecting outright below the threshold *and* then scaling by how far
+      // above it you are charges for clumping twice, and a forest floor that
+      // should be carpeted in fern and bilberry comes out as bare dirt with a
+      // few survivors. The cut is gentler now, and the falloff above it only
+      // thins the edges of a stand rather than gutting the middle.
       if (spec.clumping > 0.01) {
         const drift = clump.fbm2(x * 0.035, z * 0.035, 2) * 0.5 + 0.5;
-        const threshold = spec.clumping * 0.75;
+        const threshold = spec.clumping * 0.42;
         if (drift < threshold) continue;
-        // Denser toward the middle of a stand.
-        fitness *= lerp(1, smoothstep(threshold, 1, drift), spec.clumping);
+        fitness *= lerp(1, 0.55 + 0.45 * smoothstep(threshold, 1, drift), spec.clumping);
       }
 
       // Final acceptance, so `density` means what it says once everything
