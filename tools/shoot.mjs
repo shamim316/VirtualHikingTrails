@@ -86,6 +86,18 @@ await page.goto(url, { waitUntil: 'load', timeout: 90_000 });
 await page.waitForFunction(() => Boolean(window.hiking), null, { timeout: 60_000 });
 await page.evaluate((tier) => window.hiking.applyTier(tier), TIER);
 
+// Dismiss the splash unless we are deliberately photographing it. Clicking the
+// real button rather than hiding the element means the audio graph gets its
+// gesture too, so a broken soundscape shows up here as a console error.
+if (!('splash' in args)) {
+  // Generous: under SwiftShader the main thread is saturated by the render
+  // loop, so Playwright's actionability checks crawl.
+  await page
+    .click('.splash button.primary', { timeout: 30_000 })
+    .catch((err) => console.warn(`could not dismiss splash: ${err.message.split('\n')[0]}`));
+  await page.waitForTimeout(800);
+}
+
 if ('forest' in args) {
   // Relocate to somewhere genuinely wooded. Looking at a bare hillside tells
   // you nothing about whether the forest works.
@@ -130,6 +142,12 @@ if (WALK > 0) {
   }, WALK);
 }
 
+// UI states worth photographing on their own.
+if ('rest' in args) await page.evaluate(() => window.game.modes.set('resting'));
+if ('photo' in args) await page.evaluate(() => window.game.modes.set('photo'));
+if ('journal' in args) await page.evaluate(() => window.game.ui.toggleJournal(window.game.discovery, []));
+if ('settings' in args) await page.evaluate(() => window.game.ui.openSettings());
+
 if (args.pitch) {
   await page.evaluate((p) => { window.hiking.player.state.pitch = Number(p); }, args.pitch);
 }
@@ -149,7 +167,8 @@ for (const hour of HOURS) {
   await page.waitForTimeout(2500);
 
   const stats = await page.evaluate(() => ({ ...window.hiking.stats }));
-  const label = `${MOBILE ? 'mobile-' : ''}h${String(hour).replace('.', '_')}`;
+  const mode = ['rest', 'photo', 'journal', 'settings', 'splash'].find((m) => m in args);
+  const label = `${MOBILE ? 'mobile-' : ''}${mode ? `${mode}-` : ''}h${String(hour).replace('.', '_')}`;
   const file = path.join(OUT, `${label}.png`);
   await page.screenshot({ path: file, timeout: 180_000 });
   report.push({ hour, file, ...stats });

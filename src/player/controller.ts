@@ -171,13 +171,17 @@ export class PlayerController {
   update(input: InputState, look: { x: number; y: number }, dt: number, camera: THREE.PerspectiveCamera) {
     if (!this.initialised) this.placeAt(0, 0);
     const s = this.state;
-    const active = !this.frozen && this.mobility > 0.001;
+    // Looking and walking are separable. Photo mode takes the walking away and
+    // leaves the looking, because framing a picture is entirely about where you
+    // point the camera; rest takes both.
+    const canLook = !this.frozen;
+    const active = canLook && this.mobility > 0.001;
 
     // --- looking -------------------------------------------------------------
-    if (active) {
+    if (canLook) {
       s.yaw += look.x;
       s.pitch = clamp(s.pitch + look.y, -1.35, 1.35);
-      s.yaw -= input.turn * TURN_SPEED * dt * this.mobility;
+      s.yaw -= input.turn * TURN_SPEED * dt;
     }
 
     // --- walking -------------------------------------------------------------

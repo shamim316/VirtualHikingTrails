@@ -2,16 +2,16 @@
  * Entry point.
  *
  * Reads a seed from the URL (or makes one), starts the world, and hands the
- * rest to the engine.
+ * rest to the game.
  */
 
 import './ui/styles.css';
 import * as THREE from 'three';
-import { Engine } from './core/engine';
+import { Game } from './game/game';
 import { seedFromString } from './core/rng';
+import type { QualityTier } from './core/quality';
 
-function resolveSeed(): number {
-  const params = new URLSearchParams(location.search);
+function resolveSeed(params: URLSearchParams): number {
   const raw = params.get('seed');
   if (raw) {
     const numeric = Number(raw);
@@ -26,19 +26,31 @@ function boot() {
 
   const params = new URLSearchParams(location.search);
   const hourParam = params.get('hour');
+  const tierParam = params.get('tier');
 
-  const engine = new Engine({
+  const game = new Game({
     canvas,
-    seed: resolveSeed(),
+    seed: resolveSeed(params),
     startHour: hourParam ? Number(hourParam) : undefined,
+    tier: (tierParam as QualityTier | null) ?? undefined,
+    debug: params.has('debug'),
   });
 
-  engine.start();
+  // Write the walk down before the tab goes away. `pagehide` fires where
+  // `beforeunload` does not — notably when a phone backgrounds the browser.
+  addEventListener('pagehide', () => game.persist());
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') game.persist();
+  });
 
   // Exposed so the automated screenshot pass can drive time, position and
   // quality without a UI to click through, and so shader problems can be
   // bisected from the console rather than by rebuilding.
-  Object.assign(window as unknown as Record<string, unknown>, { hiking: engine, THREE });
+  Object.assign(window as unknown as Record<string, unknown>, {
+    hiking: game.engine,
+    game,
+    THREE,
+  });
 }
 
 boot();

@@ -1,0 +1,182 @@
+[
+  {
+    "file": "chaffinch_0.mp3",
+    "id": "chaffinch",
+    "role": "day",
+    "title": "Fringilla coelebs - Common Chaffinch XC108344",
+    "author": "Alexander Kurthy",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AFringilla%20coelebs%20-%20Common%20Chaffinch%20XC108344.mp3",
+    "bytes": 679646
+  },
+  {
+    "file": "chaffinch_1.mp3",
+    "id": "chaffinch",
+    "role": "day",
+    "title": "Fringilla coelebs - Common Chaffinch XC489896",
+    "author": "Hannu Varkki",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AFringilla%20coelebs%20-%20Common%20Chaffinch%20XC489896.mp3",
+    "bytes": 786788
+  },
+  {
+    "file": "blackbird_0.ogg",
+    "id": "blackbird",
+    "role": "dawn",
+    "title": "Turdus merula 2",
+    "author": "Oona Räisänen (Mysid)",
+    "licence": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File%3ATurdus%20merula%202.ogg",
+    "bytes": 314123
+  },
+  {
+    "file": "blackbird_1.mp3",
+    "id": "blackbird",
+    "role": "dawn",
+    "title": "Turdus merula - Common Blackbird XC436361",
+    "author": "Joost van Bruggen",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ATurdus%20merula%20-%20Common%20Blackbird%20XC436361.mp3",
+    "bytes": 297488
+  },
+  {
+    "file": "robin_0.mp3",
+    "id": "robin",
+    "role": "dawn",
+    "title": "Erithacus rubecula - European Robin XC114615",
+    "author": "Jonathon Jongsma",
+    "licence": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AErithacus%20rubecula%20-%20European%20Robin%20XC114615.mp3",
+    "bytes": 611420
+  },
+  {
+    "file": "robin_1.mp3",
+    "id": "robin",
+    "role": "dawn",
+    "title": "Erithacus rubecula - European Robin XC436940",
+    "author": "Joost van Bruggen",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AErithacus%20rubecula%20-%20European%20Robin%20XC436940.mp3",
+    "bytes": 201145
+  },
+  {
+    "file": "wren_0.ogg",
+    "id": "wren",
+    "role": "day",
+    "title": "Troglodytes troglodytes - Eurasian Wren XC125791",
+    "author": "Dan Stowell",
+    "licence": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ATroglodytes%20troglodytes%20-%20Eurasian%20Wren%20XC125791.ogg",
+    "bytes": 1132467
+  },
+  {
+    "file": "wren_1.mp3",
+    "id": "wren",
+    "role": "day",
+    "title": "Troglodytes troglodytes - Eurasian Wren XC269087",
+    "author": "Alexander Kurthy",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ATroglodytes%20troglodytes%20-%20Eurasian%20Wren%20XC269087.mp3",
+    "bytes": 1126294
+  },
+  {
+    "file": "greattit_0.mp3",
+    "id": "greattit",
+    "role": "day",
+    "title": "Parus major - Great Tit XC408050",
+    "author": "Vincent Ollivier",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AParus%20major%20-%20Great%20Tit%20XC408050.mp3",
+    "bytes": 997387
+  },
+  {
+    "file": "greattit_1.mp3",
+    "id": "greattit",
+    "role": "day",
+    "title": "Parus major - Great Tit XC538934",
+    "author": "Benoît Van Hecke",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AParus%20major%20-%20Great%20Tit%20XC538934.mp3",
+    "bytes": 440037
+  },
+  {
+    "file": "blackcap_0.mp3",
+    "id": "blackcap",
+    "role": "day",
+    "title": "Sylvia atricapilla - Eurasian Blackcap XC546697",
+    "author": "Benoît Van Hecke",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ASylvia%20atricapilla%20-%20Eurasian%20Blackcap%20XC546697.mp3",
+    "bytes": 735980
+  },
+  {
+    "file": "songthrush_0.mp3",
+    "id": "songthrush",
+    "role": "dawn",
+    "title": "Turdus philomelos - Song Thrush XC321571",
+    "author": "T",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ATurdus%20philomelos%20-%20Song%20Thrush%20XC321571.mp3",
+    "bytes": 615240
+  },
+  {
+    "file": "cuckoo_0.ogg",
+    "id": "cuckoo",
+    "role": "day",
+    "title": "Cuculus canorus song",
+    "author": "Barracuda1983",
+    "licence": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ACuculus%20canorus%20song.ogg",
+    "bytes": 380944
+  },
+  {
+    "file": "raven_0.ogg",
+    "id": "raven",
+    "role": "high",
+    "title": "Common Raven",
+    "author": "G. McGrane",
+    "licence": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File%3ACommon%20Raven.ogg",
+    "bytes": 196941
+  },
+  {
+    "file": "buzzard_0.ogg",
+    "id": "buzzard",
+    "role": "high",
+    "title": "Buteo buteo warning the fledglings 7643",
+    "author": "T.Voekler",
+    "licence": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AButeo%20buteo%20warning%20the%20fledglings%207643.ogg",
+    "bytes": 15897
+  },
+  {
+    "file": "owl_0.mp3",
+    "id": "owl",
+    "role": "night",
+    "title": "Strix aluco - Tawny Owl XC500920",
+    "author": "Alvaro Ortiz Troncoso",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AStrix%20aluco%20-%20Tawny%20Owl%20XC500920.mp3",
+    "bytes": 319248
+  },
+  {
+    "file": "owl_1.mp3",
+    "id": "owl",
+    "role": "night",
+    "title": "Strix aluco - Tawny Owl XC491062",
+    "author": "Alvaro Ortiz Troncoso",
+    "licence": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3AStrix%20aluco%20-%20Tawny%20Owl%20XC491062.mp3",
+    "bytes": 445841
+  },
+  {
+    "file": "woodpecker_0.ogg",
+    "id": "woodpecker",
+    "role": "day",
+    "title": "Buntspecht (Dendrocopos major), bettelnde Jungvögel",
+    "author": "M_H.DE",
+    "licence": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File%3ABuntspecht%20(Dendrocopos%20major)%2C%20bettelnde%20Jungv%C3%B6gel.ogg",
+    "bytes": 196391
+  }
+]

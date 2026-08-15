@@ -36,6 +36,7 @@ const KEY_ACTIONS: Record<string, Action> = {
   KeyP: 'photo',
   KeyJ: 'journal',
   KeyM: 'map',
+  Comma: 'settings',
   Escape: 'escape',
   Slash: 'help',
   Space: 'capture',

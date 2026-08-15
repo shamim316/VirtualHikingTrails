@@ -1,0 +1,12 @@
+# Cloudflare Pages deployment.
+#
+#   npm run build
+#   npx wrangler pages deploy dist
+#
+# Nothing here needs a Worker: the game is a static bundle plus an asset
+# directory, with no server side at all. Saves live in the player's
+# localStorage and never leave the device.
+
+name = "virtual-hiking-trails"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "dist"

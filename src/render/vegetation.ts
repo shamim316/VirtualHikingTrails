@@ -762,6 +762,70 @@ export class Vegetation {
     }
   }
 
+  /**
+   * The nearest instance of each species within a radius.
+   *
+   * This is what the discovery system looks at. It wants one representative per
+   * species rather than every plant — you notice *a* foxglove, not each of the
+   * forty in the clearing — so the nearest is kept and the rest skipped, which
+   * also keeps the line-of-sight test down to a handful of rays.
+   *
+   * Reuses its output array; the caller must not hold on to it.
+   */
+  private nearbyScratch: Array<{ id: string; x: number; y: number; top: number; z: number }> = [];
+  private nearbyBest = new Map<number, { d: number; i: number }>();
+
+  nearbyInstances(camX: number, camZ: number, radius: number) {
+    const out = this.nearbyScratch;
+    out.length = 0;
+    const best = this.nearbyBest;
+    best.clear();
+    const radiusSq = radius * radius;
+
+    for (const cell of this.cells.values()) {
+      if (Math.hypot(cell.centreX - camX, cell.centreZ - camZ) - SCATTER_CELL > radius) continue;
+
+      for (const key of Object.keys(cell.instances)) {
+        const speciesIndex = Number(key);
+        const packed = cell.instances[speciesIndex];
+        if (!packed) continue;
+
+        for (let i = 0; i + INSTANCE_STRIDE <= packed.length; i += INSTANCE_STRIDE) {
+          const dx = packed[i] - camX;
+          const dz = packed[i + 2] - camZ;
+          const distSq = dx * dx + dz * dz;
+          if (distSq > radiusSq) continue;
+
+          const current = best.get(speciesIndex);
+          if (current && current.d <= distSq) continue;
+
+          const species = SPECIES[speciesIndex];
+          if (!species) continue;
+          // Base and top, not a single point. A fir six metres away is thirty
+          // metres of tree and only part of it is ever in frame; the caller
+          // picks whichever part of that span it is actually looking at.
+          const baseY = packed[i + 1];
+          const topY = baseY + species.height[1] * packed[i + 4];
+
+          // Index into `out` so the winner can be overwritten in place rather
+          // than appended again when a nearer one turns up in a later cell.
+          if (current) {
+            current.d = distSq;
+            const entry = out[current.i];
+            entry.x = packed[i];
+            entry.y = baseY;
+            entry.top = topY;
+            entry.z = packed[i + 2];
+          } else {
+            best.set(speciesIndex, { d: distSq, i: out.length });
+            out.push({ id: species.id, x: packed[i], y: baseY, top: topY, z: packed[i + 2] });
+          }
+        }
+      }
+    }
+    return out;
+  }
+
   /** Total plants currently drawn, for the debug readout. */
   get instanceCount(): number {
     let total = 0;
