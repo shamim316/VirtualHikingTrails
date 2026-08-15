@@ -558,19 +558,6 @@ export const SPECIES: Species[] = [
       moisture: 0, canopy: 0, density: 1400, clumping: 0.4,
     },
   },
-  {
-    id: 'cliff',
-    name: 'Rock Outcrop',
-    latin: '',
-    group: 'rock',
-    height: [2.5, 7],
-    xp: 12,
-    note: 'Where the bedrock breaks through the soil you can read the whole hillside’s history in a few metres of exposed strata.',
-    habitat: {
-      biomes: [Biome.Scree, Biome.Meadow], altitude: [350, 880], maxSlope: 0.7,
-      moisture: -0.3, canopy: -0.4, density: 45, clumping: 0.6,
-    },
-  },
 ];
 
 export const SPECIES_BY_ID = new Map(SPECIES.map((s) => [s.id, s]));

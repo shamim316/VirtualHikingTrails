@@ -40,9 +40,24 @@ import type { QualitySettings } from '../core/quality';
 /** How far the player must move before the instance buffers are repacked. */
 const REBUILD_DISTANCE = 6;
 
+/**
+ * Billboard impostors are switched off.
+ *
+ * The machinery is here and the atlases bake correctly — the alpha channel
+ * comes out cleanly bimodal — but the cutout fails at draw time and every
+ * distant tree renders as a solid rectangle with a picture of a tree in it,
+ * which is far worse than having no distant trees at all. Removing the
+ * impostor meshes from the scene graph makes the walls disappear, which is how
+ * this was pinned down. Until the sampling is fixed, trees are drawn as real
+ * geometry within a radius the triangle budget can actually afford.
+ */
+const IMPOSTORS_ENABLED = false;
+
 /** Per-group draw radius as a multiple of the tier's vegetation distance. */
 const GROUP_RANGE: Record<string, number> = {
-  canopy: 3.4,     // trees have to be visible across a valley
+  // Without impostors this is bounded by arithmetic, not by taste: a fir is
+  // 150k triangles, so a few hundred of them is the whole frame budget.
+  canopy: 0.4,
   deadwood: 1.0,
   understory: 1.0,
   rock: 1.6,
@@ -243,7 +258,7 @@ export class Vegetation {
         // drawing the real mesh within a small radius is simply cheaper than
         // the machinery to avoid it. One atlas is baked from the first variant
         // and shared — at fifty metres nobody can tell the variants apart.
-        const wantsImpostor = species.group === 'canopy' && species.height[1] >= 4;
+        const wantsImpostor = IMPOSTORS_ENABLED && species.group === 'canopy' && species.height[1] >= 4;
 
         this.renderers.set(index, {
           species,
