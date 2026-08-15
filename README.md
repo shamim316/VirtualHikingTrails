@@ -14,7 +14,7 @@ npm install
 npm run dev            # http://localhost:5173
 npm run build          # typecheck + bundle to dist/
 npm run size           # transferred bytes against the 80MB budget
-npm run deploy         # build, then wrangler pages deploy dist
+npm run deploy         # build, then wrangler deploy
 ```
 
 The repository ships without the raw scans. To rebuild the asset directory from
@@ -107,6 +107,61 @@ call, triangle and chunk counts are not.
 | <kbd>/</kbd> | frame statistics |
 
 URL parameters: `?seed=`, `?hour=`, `?tier=low|medium|high|ultra`, `?debug`.
+
+## Deploying
+
+The game is static: a bundle plus an asset directory, no server side, no
+database, no network calls after load. Anything that can serve files can host
+it. `wrangler.toml` is configured for **Cloudflare Workers static assets**,
+which is what Cloudflare recommends for new projects.
+
+### From a connected GitHub repository
+
+The asset directory is committed, so a Git-sourced build needs nothing extra.
+In the Cloudflare dashboard: **Workers & Pages → Create → Import a repository**,
+pick this repo, and set
+
+| Setting | Value |
+| --- | --- |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Build output directory | `dist` |
+| Environment variable | `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` = `1` |
+
+That last one is worth setting. `playwright` is a devDependency used only by
+the screenshot and walk tests, and its install script otherwise downloads a
+couple of hundred megabytes of browser on every build. Nothing breaks without
+it; the build is just slower.
+
+Every push to the branch then redeploys. To deploy by hand instead:
+
+```
+npx wrangler login
+npm run deploy
+```
+
+### Against the platform limits
+
+Workers static assets allows 20,000 files on the free plan and 25 MiB per
+file. This build is **78 files, largest 11.1 MB** — the biggest tree scan —
+so there is a lot of headroom on both. `npm run size` prints the current
+numbers, and `public/_headers` (6 rules, against a limit of 100) sets the
+cache policy and a content security policy that forbids any outbound request,
+so a build that accidentally grew a network dependency would fail loudly
+rather than quietly phone home.
+
+`not_found_handling` is deliberately left at its default rather than
+single-page-application: there are no client-side routes to preserve, and SPA
+handling would answer a missing model file with `index.html` and a 200, hiding
+a broken asset path instead of showing a 404.
+
+### Cloudflare Pages instead
+
+Pages also works and the repository is compatible with it — same build command,
+same output directory, and `_headers` behaves the same way. Replace the
+`[assets]` block in `wrangler.toml` with `pages_build_output_dir = "dist"` and
+deploy with `npx wrangler pages deploy dist`. Workers is the better default now;
+Pages is there if you already have a Pages project.
 
 ## Credits and licence
 

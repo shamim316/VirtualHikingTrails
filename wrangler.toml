@@ -1,12 +1,27 @@
-# Cloudflare Pages deployment.
+# Cloudflare Workers, serving the game as static assets.
+#
+# There is no Worker script: the game is a bundle plus an asset directory with
+# no server side at all, so every request is answered from the asset store and
+# no compute is invoked. Saves live in the player's localStorage and never
+# leave the device.
+#
+# Deploy from a connected GitHub repository (Workers Builds), or by hand:
 #
 #   npm run build
-#   npx wrangler pages deploy dist
+#   npx wrangler deploy
 #
-# Nothing here needs a Worker: the game is a static bundle plus an asset
-# directory, with no server side at all. Saves live in the player's
-# localStorage and never leave the device.
+# Both routes need `dist/` to have been built first — Wrangler uploads what is
+# in the assets directory, it does not build it.
 
 name = "virtual-hiking-trails"
 compatibility_date = "2025-01-01"
-pages_build_output_dir = "dist"
+
+[assets]
+directory = "./dist"
+# Left at the default (`none`) deliberately. Single-page-application handling
+# would answer a missing model file with index.html and a 200, which turns a
+# broken asset path into a silent failure instead of a 404 in the console.
+# There are no client-side routes here to preserve.
+
+[observability]
+enabled = true

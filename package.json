@@ -14,7 +14,7 @@
     "assets:audio": "node tools/fetch-audio.mjs",
     "assets:all": "npm run assets:fetch && npm run assets:process && npm run assets:audio",
     "size": "node tools/size-report.mjs",
-    "deploy": "npm run build && npx wrangler pages deploy dist",
+    "deploy": "npm run build && npx wrangler deploy",
     "walk": "node tools/walk-test.mjs",
     "shoot": "node tools/shoot.mjs"
   },
