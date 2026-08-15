@@ -1,0 +1,33 @@
+{
+  "name": "virtual-hiking-trails",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "An open-world hiking exploration game for people who need a walk in the woods.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "assets:fetch": "node tools/fetch-assets.mjs",
+    "assets:process": "node tools/process-assets.mjs",
+    "assets:audio": "node tools/fetch-audio.mjs",
+    "assets:all": "npm run assets:fetch && npm run assets:process && npm run assets:audio",
+    "size": "node tools/size-report.mjs",
+    "deploy": "npm run build && npx wrangler pages deploy dist"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.1.1",
+    "@gltf-transform/extensions": "^4.1.1",
+    "@gltf-transform/functions": "^4.1.1",
+    "@types/three": "^0.180.0",
+    "meshoptimizer": "^0.22.0",
+    "playwright": "^1.62.1",
+    "sharp": "^0.33.5",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

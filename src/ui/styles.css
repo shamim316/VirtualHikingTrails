@@ -1,0 +1,90 @@
+/*
+ * The interface tries very hard not to be there.
+ *
+ * Everything is low-contrast, thin-stroked and slow to appear. Nothing blinks,
+ * nothing counts down, nothing turns red. The palette is taken from the world
+ * itself — lichen, birch bark, wet slate, low sun.
+ */
+
+:root {
+  --ink: #f0ece1;
+  --ink-dim: rgba(240, 236, 225, 0.62);
+  --ink-faint: rgba(240, 236, 225, 0.34);
+  --moss: #7d9b6a;
+  --lichen: #c3d1a4;
+  --bark: #2a2620;
+  --slate: rgba(18, 22, 20, 0.58);
+  --gold: #e3c98d;
+
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+    Georgia, 'Times New Roman', serif;
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0d1410;
+  color: var(--ink);
+  font-family: var(--sans);
+  /* No text selection anywhere: dragging to look shouldn't highlight the HUD. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+#ui-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Keep the HUD clear of notches and home indicators. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#ui-root > * {
+  pointer-events: none;
+}
+
+.noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  color: var(--ink-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

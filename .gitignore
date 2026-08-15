@@ -1,0 +1,8 @@
+node_modules/
+dist/
+assets-raw/
+shots/
+*.log
+.DS_Store
+tools/*.mjs.map
+tools/map-preview.mjs
