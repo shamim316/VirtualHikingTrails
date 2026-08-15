@@ -95,7 +95,10 @@ float starField(vec3 dir) {
 
   vec2 offset = vec2(hash13(cell + 11.0), hash13(cell + 23.0)) - 0.5;
   float d = length(local.xy - offset * 0.6);
-  float brightness = pow(fract(r * 91.7), 6.0);
+  // A magnitude distribution, not a uniform one: most stars you can see are
+  // near the limit of visibility and a handful are obvious. Exponent 6 put so
+  // much of the population below the noise floor that the sky read as empty.
+  float brightness = pow(fract(r * 91.7), 3.6);
   float star = smoothstep(0.09, 0.0, d) * brightness;
 
   // A slight colour spread between hot blue and cool orange stars.
@@ -159,6 +162,23 @@ void main() {
 
   vec3 day = (inscatter + direct) * 0.04;
 
+  // Single-scattering Preetham has no way to lose light on the way to the eye,
+  // so the horizon accumulates roughly eight times the zenith's radiance and
+  // clips to a flat white band across a third of the sky. A gentle Reinhard
+  // shoulder compresses the top end, which is much closer to what multiple
+  // scattering does in the real atmosphere. Applied before the environment
+  // capture so the light on the land agrees with the sky you can see.
+  //
+  // Weighted toward the horizon, because that is where the error is. A single
+  // constant strong enough to tame the band also flattens the zenith, and a
+  // sky whose blue overhead has been compressed out of it stops reading as
+  // depth and starts reading as paint.
+  //
+  // Daytime only: the night sky is not a Preetham integral, and putting stars
+  // through a shoulder this strong near the horizon erases them.
+  float horizonWeight = pow(1.0 - clamp(abs(up), 0.0, 1.0), 3.0);
+  day = day / (1.0 + day * mix(0.09, 0.52, horizonWeight));
+
   // --- night ----------------------------------------------------------------
   float moonCos = dot(dir, uMoonDir);
   float moonDisc = smoothstep(MOON_ANGULAR_DIAMETER_COS, MOON_ANGULAR_DIAMETER_COS + 3.0e-5, moonCos);
@@ -169,7 +189,7 @@ void main() {
   vec3 night = mix(nightHorizon, nightZenith, clamp(up * 1.4, 0.0, 1.0));
 
   float stars = starField(dir) * uStarFade * smoothstep(-0.02, 0.18, up);
-  night += starColor(dir) * stars * 1.4;
+  night += starColor(dir) * stars * 3.2;
   night += vec3(0.85, 0.87, 0.95) * (moonDisc * 3.2 + moonGlow) * (0.25 + uMoonPhase * 0.75);
   // Airglow near the horizon; even a dark sky is never truly black down low.
   night += nightHorizon * 0.7 * pow(clamp(1.0 - abs(up) * 3.0, 0.0, 1.0), 2.0);
@@ -185,15 +205,6 @@ void main() {
   vec3 horizonHaze = color;
   vec3 ground = mix(horizonHaze, horizonHaze * uGroundColor * 3.0, 0.7) * mix(0.5, 0.28, uNight);
   color = mix(color, ground, groundBlend);
-
-  // Single-scattering Preetham has no way to lose light on the way to the eye,
-  // so the horizon accumulates roughly eight times the zenith's radiance and
-  // clips to a flat white band across a third of the sky. A gentle Reinhard
-  // shoulder compresses the top end without touching the blue overhead, which
-  // is much closer to what multiple scattering does in the real atmosphere.
-  // Applied before the environment capture so the light on the land agrees
-  // with the sky you can see.
-  color = color / (1.0 + color * 0.12);
 
   // Belt and braces for the environment capture: no negatives, no infinities,
   // and a ceiling comfortably inside half-float range.

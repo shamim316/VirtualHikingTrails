@@ -163,8 +163,10 @@ for (const hour of HOURS) {
     engine.weather.timeRunning = false;
     if (p !== null) engine.player.state.pitch = Number(p);
   }, [hour, args.pitch ?? null]);
-  // Let the sky's environment capture and the exposure ease settle.
-  await page.waitForTimeout(2500);
+  // Let the sky's environment capture and the exposure ease settle. Generous,
+  // because under SwiftShader the frame rate is low enough that a few seconds
+  // is only a couple of dozen frames of damping.
+  await page.waitForTimeout(Number(args.ease ?? 9000));
 
   const stats = await page.evaluate(() => ({ ...window.hiking.stats }));
   const mode = ['rest', 'photo', 'journal', 'settings', 'splash'].find((m) => m in args);

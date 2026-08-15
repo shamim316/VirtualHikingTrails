@@ -274,7 +274,9 @@ export class Interface {
     for (const [label, handler, aria, action] of [
       ['\u25ce', () => this.callbacks.onToggleRest(), 'Sit and rest', 'rest'],
       ['\u25c7', () => this.callbacks.onTogglePhoto(), 'Photograph', 'photo'],
-      ['\u2767', () => this.callbacks.onToggleJournal(), 'Field journal', 'journal'],
+      // U+2630 rather than a prettier fleuron: system UI fonts on Android and
+      // Windows have no glyph for most ornaments and draw a tofu box instead.
+      ['\u2630', () => this.callbacks.onToggleJournal(), 'Field journal', 'journal'],
       ['\u2699', () => this.toggleSettings(), 'Settings', 'settings'],
     ] as Array<[string, () => void, string, string]>) {
       const button = el('button', 'round');
