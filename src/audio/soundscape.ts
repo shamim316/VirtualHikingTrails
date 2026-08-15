@@ -61,22 +61,22 @@ interface BirdClip {
 const CLIP_MANIFEST: Array<{ file: string; id: string; role: BirdClip['role'] }> = [
   { file: 'chaffinch_0.mp3', id: 'chaffinch', role: 'day' },
   { file: 'chaffinch_1.mp3', id: 'chaffinch', role: 'day' },
-  { file: 'blackbird_0.ogg', id: 'blackbird', role: 'dawn' },
+  { file: 'blackbird_0.mp3', id: 'blackbird', role: 'dawn' },
   { file: 'blackbird_1.mp3', id: 'blackbird', role: 'dawn' },
   { file: 'robin_0.mp3', id: 'robin', role: 'dawn' },
   { file: 'robin_1.mp3', id: 'robin', role: 'dawn' },
-  { file: 'wren_0.ogg', id: 'wren', role: 'day' },
+  { file: 'wren_0.mp3', id: 'wren', role: 'day' },
   { file: 'wren_1.mp3', id: 'wren', role: 'day' },
   { file: 'greattit_0.mp3', id: 'greattit', role: 'day' },
   { file: 'greattit_1.mp3', id: 'greattit', role: 'day' },
   { file: 'blackcap_0.mp3', id: 'blackcap', role: 'day' },
   { file: 'songthrush_0.mp3', id: 'songthrush', role: 'dawn' },
-  { file: 'cuckoo_0.ogg', id: 'cuckoo', role: 'day' },
-  { file: 'raven_0.ogg', id: 'raven', role: 'high' },
-  { file: 'buzzard_0.ogg', id: 'buzzard', role: 'high' },
+  { file: 'cuckoo_0.mp3', id: 'cuckoo', role: 'day' },
+  { file: 'raven_0.mp3', id: 'raven', role: 'high' },
+  { file: 'buzzard_0.mp3', id: 'buzzard', role: 'high' },
   { file: 'owl_0.mp3', id: 'owl', role: 'night' },
   { file: 'owl_1.mp3', id: 'owl', role: 'night' },
-  { file: 'woodpecker_0.ogg', id: 'woodpecker', role: 'day' },
+  { file: 'woodpecker_0.mp3', id: 'woodpecker', role: 'day' },
 ];
 
 export class Soundscape {

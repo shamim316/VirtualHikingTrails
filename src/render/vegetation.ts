@@ -224,12 +224,22 @@ export class Vegetation {
         for (const sources of variantSources) {
           // Normalise the variant to unit height, standing on its own base and
           // centred in x/z, so the scatterer's scale means "metres tall".
+          //
+          // Dequantize *before* measuring, not after. Measuring the packed
+          // attribute and then applying the node's decode transform is not the
+          // same thing as measuring the decoded geometry, and the difference is
+          // silent: it produced a Scots pine whose box read fifty-eight metres
+          // wide, so the width term below won the max, and the whole species
+          // was drawn at half the height the scatterer asked for.
+          const prepared: THREE.BufferGeometry[] = [];
           const bounds = new THREE.Box3();
           for (const source of sources) {
-            const position = source.geometry.getAttribute('position') as THREE.BufferAttribute;
-            bounds.union(
-              new THREE.Box3().setFromBufferAttribute(position).applyMatrix4(source.matrixWorld)
-            );
+            const geometry = source.geometry.clone();
+            dequantize(geometry);
+            geometry.applyMatrix4(source.matrixWorld);
+            geometry.computeBoundingBox();
+            bounds.union(geometry.boundingBox!);
+            prepared.push(geometry);
           }
           const naturalHeight = bounds.max.y - bounds.min.y;
           const naturalWidth = Math.max(bounds.max.x - bounds.min.x, bounds.max.z - bounds.min.z);
@@ -240,7 +250,15 @@ export class Vegetation {
           // it five metres wide, and the hillside fills with flat slabs. Taking
           // the width into account leaves anything upright untouched and keeps
           // ground cover the size ground cover should be.
-          const height = Math.max(0.02, naturalHeight, naturalWidth * 0.35);
+          //
+          // Trees are exempt. The width term exists for things that lie flat,
+          // and a spreading crown is not one: a broadleaf whose canopy is
+          // wider than the tree is tall was being drawn at 60% of the height
+          // the scatterer asked for, which is how a wood ends up looking like
+          // scrub. A tree's size is its height.
+          const height = species.group === 'canopy'
+            ? Math.max(0.02, naturalHeight)
+            : Math.max(0.02, naturalHeight, naturalWidth * 0.35);
           const cx = (bounds.min.x + bounds.max.x) / 2;
           const cz = (bounds.min.z + bounds.max.z) / 2;
 
@@ -250,10 +268,9 @@ export class Vegetation {
           variation.setUsage(THREE.DynamicDrawUsage);
 
           const meshes: THREE.InstancedMesh[] = [];
-          for (const source of sources) {
-            const geometry = source.geometry.clone();
-            dequantize(geometry);
-            geometry.applyMatrix4(source.matrixWorld);
+          for (let i = 0; i < sources.length; i++) {
+            const source = sources[i];
+            const geometry = prepared[i];
             geometry.translate(-cx, -bounds.min.y, -cz);
             geometry.scale(1 / height, 1 / height, 1 / height);
             // Recompute both bounds after the transforms — anything reading a

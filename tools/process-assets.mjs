@@ -23,7 +23,7 @@
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import {
-  dedup, prune, weld, simplify, textureCompress, quantize, flatten,
+  dedup, prune, weld, textureCompress, quantize, flatten,
 } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
@@ -32,6 +32,27 @@ import path from 'node:path';
 
 const RAW = 'assets-raw';
 const OUT = 'public/assets';
+
+/**
+ * The largest a grown foliage island may get, in metres.
+ *
+ * These islands are not single cards: measured, a conifer's are five triangles
+ * and 4.4cm across — a needle cluster. Grown to this radius one becomes a
+ * sprig about seventy centimetres long, which is what a fir branch actually
+ * carries, and the twig atlas patch each island samples is big enough to hold
+ * up at that size.
+ *
+ * It is the binding constraint on a conifer, deliberately. Preserving the
+ * original leaf area alone wants 7x, and at 7x a five-triangle needle cluster
+ * becomes a forty-centimetre blade: from across a clearing the tree looks
+ * right, but standing under a branch you are looking at green planks. Twenty
+ * centimetres across is about what one fir sprig is, and the twig atlas holds
+ * five whole sprigs, so a card at that size shows a real branchlet.
+ *
+ * The density that growth is no longer buying has to be paid for in cards,
+ * which is why the conifer budgets are the largest in the manifest.
+ */
+const MAX_CARD_RADIUS = 0.10;
 
 const argv = process.argv.slice(2);
 const FORCE = argv.includes('--force');
@@ -69,8 +90,12 @@ for (const tex of manifest.textures) {
     // Normal maps are the one place lossy compression really shows: banding in
     // a normal map becomes visible faceting under a moving light, so they get
     // a much higher quality setting than colour does.
+    // 1024, not 2048. The engine packs these into a texture array at 1024 and
+    // downsamples anything larger on load, so shipping 2048 spent ten
+    // megabytes — an eighth of the whole budget — on pixels that were thrown
+    // away in the browser before the first frame.
     await sharp(src)
-      .resize(2048, 2048, { fit: 'fill' })
+      .resize(1024, 1024, { fit: 'fill' })
       .webp({ quality, effort: 5 })
       .toFile(dest);
 
@@ -138,10 +163,6 @@ for (const model of manifest.models) {
     }
     void Math.max(1, Math.min(roots.length, MAX_VARIANTS));
 
-    // The budget covers the asset as a whole, so with variants kept apart each
-    // one gets its share.
-    const ratio = Math.min(1, model.tris / Math.max(1, countTriangles(document)));
-
     // Throw away the scanner's normals before welding.
     //
     // This one line is the difference between the pipeline working and not.
@@ -153,33 +174,42 @@ for (const model of manifest.models) {
     // budget. Dropping normals first takes it from 114,778 border edges to
     // 8,454 and the same call lands on budget exactly. Smooth normals are
     // recomputed below, which is what an organic scan wants anyway.
+    //
+    // Vertex colours go too. Poly Haven bakes two sets into every scan and no
+    // shader in the game reads either, but quantisation happily keeps them and
+    // they cost eight bytes a vertex — two megabytes on a tree that is mostly
+    // vertices.
     for (const mesh of document.getRoot().listMeshes()) {
-      for (const primitive of mesh.listPrimitives()) primitive.setAttribute('NORMAL', null);
+      for (const primitive of mesh.listPrimitives()) {
+        primitive.setAttribute('NORMAL', null);
+        primitive.setAttribute('COLOR_0', null);
+        primitive.setAttribute('COLOR_1', null);
+      }
     }
 
-    await document.transform(
-      weld(),
-      simplify({
-        simplifier: MeshoptSimplifier,
-        ratio,
-        // Error is a fraction of the *mesh radius*, so on a thirty-metre fir
-        // even a modest-sounding 0.05 is one and a half metres of licence —
-        // easily enough to swallow whole needle cards and leave the canopy as
-        // a handful of brown planks. Kept tight; the reduction comes from the
-        // ratio and from card culling, not from letting the shape drift.
-        error: 0.008,
-        lockBorder: false,
-      }),
-      prune()
-    );
+    // Split the budget between the two kinds of geometry, because they want
+    // opposite treatment and lumping them together is what wrecked the
+    // conifers.
+    //
+    // A fir's trunk and branches are a connected surface: edge collapse is
+    // exactly right for them, and the normal map carries the detail that goes.
+    // Its needles are 4.07 *million* two-triangle alpha cards with a median
+    // edge of three millimetres, and edge collapse does not thin those, it
+    // deletes them. Run together under one global ratio, 98% of the deletion
+    // landed on the canopy and the tree came out as a pole holding 2% of its
+    // original leaf area.
+    // Weld before anything else looks at the geometry. A raw scan is
+    // flat-shaded, so every triangle owns its three vertices and *everything*
+    // has three vertices per triangle; only after welding does the ratio
+    // become the honest signal that tells a card soup from a surface.
+    await document.transform(weld(), prune());
 
-    // Foliage is thousands of separate two-triangle cards. Edge collapse can
-    // never reduce those — a card has no interior edges to collapse — so
-    // `fir_tree_01` bottoms out at 65k triangles against a 16k budget, one
-    // card per needle cluster. The only way down is to remove whole cards,
-    // which is what a real foliage LOD does, growing the survivors slightly so
-    // the canopy keeps its density.
-    cullFoliageCards(document, model.tris);
+    const split = budgetSplit(document, model.tris);
+    cullFoliageCards(document, split.foliage);
+
+    // Solid surfaces only, per primitive, so a trunk's ratio is computed from
+    // the trunk rather than from the canopy that dwarfs it.
+    simplifySolids(document, split.solid);
 
     await document.transform(
       prune(),
@@ -230,130 +260,273 @@ console.log(`\nprocessed ${report.length} assets, ${(shipped / 1e6).toFixed(1)}M
 // ---------------------------------------------------------------------------
 
 /**
- * Thin a mesh made of disconnected foliage cards down to a triangle budget.
+ * True for the card soups: leaves, needles, grass blades.
  *
- * Finds connected components (a card is one), and if the primitive is mostly
- * small components — the signature of leaves, needles and grass blades — keeps
- * a deterministic random subset. Survivors are scaled up about their own
- * centroid by the square root of the cull ratio, which preserves the total leaf
- * *area* even though there are fewer cards, so the canopy stays as opaque as it
- * was and the tree doesn't visibly thin out.
+ * Decided from the geometry rather than from the declared alpha mode, because
+ * the declared mode lies. `fir_tree_01` marks its twigs BLEND and `pine_tree_01`
+ * marks the identical kind of geometry OPAQUE, cutting it out with an alpha
+ * test the game applies itself — so trusting the material left seventeen
+ * million pine triangles untouched and shipped a 475MB tree.
  *
- * Primitives that are properly connected surfaces (trunks, rocks) are left
- * alone — simplification already handled those.
+ * After welding, a soup of two-triangle quads has about two vertices per
+ * triangle; a connected surface has about half of one. Nothing else in these
+ * scans sits anywhere near the middle.
  */
-function cullFoliageCards(document, budget) {
-  const total = countTriangles(document);
-  if (total <= budget) return;
+function isFoliage(primitive) {
+  const triangles = trianglesOf(primitive);
+  if (!triangles) return false;
+  return primitive.getAttribute('POSITION').getCount() / triangles > 1.2;
+}
 
-  const keepRatio = budget / total;
+function trianglesOf(primitive) {
+  const indices = primitive.getIndices();
+  const position = primitive.getAttribute('POSITION');
+  if (!position) return 0;
+  return (indices ? indices.getCount() : position.getCount()) / 3;
+}
 
+/**
+ * Divide a model's triangle budget between foliage and solid geometry.
+ *
+ * Solid gets a tenth, floored so a trunk is never reduced to a stick, and
+ * capped at whatever it actually has so a rock does not "spend" a foliage
+ * allowance it has no use for. Everything left goes to the canopy, which is
+ * the right bias: on a tree, the leaves are the thing you are looking at.
+ */
+function budgetSplit(document, budget) {
+  let foliage = 0;
+  let solid = 0;
   for (const mesh of document.getRoot().listMeshes()) {
     for (const primitive of mesh.listPrimitives()) {
-      const indices = primitive.getIndices();
-      const position = primitive.getAttribute('POSITION');
-      if (!indices || !position) continue;
+      const count = trianglesOf(primitive);
+      if (isFoliage(primitive)) foliage += count;
+      else solid += count;
+    }
+  }
+  if (foliage === 0) return { foliage: 0, solid: budget };
+  const solidBudget = Math.min(solid, Math.max(2500, Math.round(budget * 0.1)));
+  return { foliage: Math.max(1000, budget - solidBudget), solid: solidBudget };
+}
 
-      const idx = indices.getArray();
-      const triCount = idx.length / 3;
-      const vertCount = position.getCount();
+/**
+ * Edge-collapse the connected surfaces, one primitive at a time.
+ *
+ * gltf-transform's `simplify()` takes a single ratio for the whole document,
+ * which is wrong the moment a document holds both a 240k-triangle trunk and a
+ * 6.7M-triangle needle soup: the ratio that fits the total annihilates the
+ * trunk. Driving meshoptimizer per primitive lets each surface be reduced
+ * against its own size, and lets the foliage be skipped entirely.
+ */
+function simplifySolids(document, budget) {
+  const solids = [];
+  let total = 0;
+  for (const mesh of document.getRoot().listMeshes()) {
+    for (const primitive of mesh.listPrimitives()) {
+      if (isFoliage(primitive)) continue;
+      const count = trianglesOf(primitive);
+      if (!count || !primitive.getIndices()) continue;
+      solids.push(primitive);
+      total += count;
+    }
+  }
+  if (!total || total <= budget) return;
 
-      // Union-find over vertices; two vertices are connected if a triangle
-      // uses both.
-      const parent = new Uint32Array(vertCount);
-      for (let i = 0; i < vertCount; i++) parent[i] = i;
-      const find = (a) => {
-        while (parent[a] !== a) {
-          parent[a] = parent[parent[a]];
-          a = parent[a];
-        }
-        return a;
-      };
-      const union = (a, b) => {
-        const ra = find(a);
-        const rb = find(b);
-        if (ra !== rb) parent[ra] = rb;
-      };
-      for (let i = 0; i < idx.length; i += 3) {
-        union(idx[i], idx[i + 1]);
-        union(idx[i + 1], idx[i + 2]);
+  const ratio = budget / total;
+  for (const primitive of solids) {
+    const indices = primitive.getIndices();
+    const position = primitive.getAttribute('POSITION');
+    const source = indices.getArray();
+    const idx = source instanceof Uint32Array ? source : new Uint32Array(source);
+    const positions = Float32Array.from(position.getArray());
+
+    const target = Math.max(24, Math.floor((idx.length / 3) * ratio)) * 3;
+    if (target >= idx.length) continue;
+
+    // Error is a fraction of the *mesh radius*, so on a thirty-metre fir even
+    // a modest-sounding 0.05 is one and a half metres of licence. Kept tight:
+    // the reduction should come from the target count, not from letting the
+    // silhouette drift.
+    // No LockBorder. These are photoscans: even after welding, a good fraction
+    // of the edges are borders, and refusing to collapse across them is what
+    // made `boulder_01` bottom out at 56k triangles against a 1.2k budget.
+    const [simplified] = MeshoptSimplifier.simplify(idx, positions, 3, target, 0.008);
+    if (simplified.length && simplified.length < idx.length) {
+      indices.setArray(simplified);
+    }
+  }
+}
+
+/**
+ * Thin a soup of disconnected foliage cards down to a triangle budget.
+ *
+ * Finds connected components — one per card — and keeps a deterministic random
+ * subset, then grows each survivor about its own centroid so the canopy keeps
+ * the leaf *area* it had. That growth is the whole point and it is not a
+ * cosmetic touch: a fir scan models every needle individually, at a median
+ * card edge of three millimetres, so keeping 2% of the cards at their original
+ * size leaves 2% of the canopy. The survivors have to become sprigs.
+ *
+ * Growth is capped per card by an absolute size rather than by a multiplier.
+ * A needle can safely become a twig; a card that was already a hand's breadth
+ * across should not become a bedsheet, and the same constant expresses both.
+ * Card UVs span about a sixth of the twig atlas each, so a grown card shows a
+ * real twig rather than one blurred needle.
+ *
+ * Primitives that are properly connected surfaces are left alone —
+ * `simplifySolids` has already handled those.
+ */
+function cullFoliageCards(document, budget) {
+  if (budget <= 0) return;
+
+  let total = 0;
+  const targets = [];
+  for (const mesh of document.getRoot().listMeshes()) {
+    for (const primitive of mesh.listPrimitives()) {
+      if (!isFoliage(primitive) || !primitive.getIndices()) continue;
+      const count = trianglesOf(primitive);
+      if (!count) continue;
+      targets.push(primitive);
+      total += count;
+    }
+  }
+  if (!targets.length || total <= budget) return;
+
+  const keepRatio = budget / total;
+  // Preserving total leaf area means growing by 1/sqrt(keepRatio).
+  const globalGrow = 1 / Math.sqrt(Math.max(1e-5, keepRatio));
+
+  for (const primitive of targets) {
+    const indices = primitive.getIndices();
+    const position = primitive.getAttribute('POSITION');
+    const idx = indices.getArray();
+    const pos = position.getArray();
+    const triCount = idx.length / 3;
+    const vertCount = position.getCount();
+
+    // Union-find over vertices; two are connected if a triangle uses both.
+    // Kept as flat typed arrays throughout: a hero conifer variant is four
+    // million triangles, and one JS array per component would be gigabytes.
+    const parent = new Uint32Array(vertCount);
+    for (let i = 0; i < vertCount; i++) parent[i] = i;
+    const find = (a) => {
+      while (parent[a] !== a) {
+        parent[a] = parent[parent[a]];
+        a = parent[a];
       }
+      return a;
+    };
+    const union = (a, b) => {
+      const ra = find(a);
+      const rb = find(b);
+      if (ra !== rb) parent[ra] = rb;
+    };
+    for (let i = 0; i < idx.length; i += 3) {
+      union(idx[i], idx[i + 1]);
+      union(idx[i + 1], idx[i + 2]);
+    }
 
-      // Group triangles by component.
-      const groups = new Map();
-      for (let t = 0; t < triCount; t++) {
-        const root = find(idx[t * 3]);
-        let list = groups.get(root);
-        if (!list) groups.set(root, (list = []));
-        list.push(t);
-      }
+    // Only bail if there is nothing to cull *by*. The primitives that reach
+    // here are already alpha-cut foliage, so the old "average island is small"
+    // test was both redundant and wrong: a pine's needle clusters average
+    // dozens of triangles per island, which tripped the guard and left the
+    // whole 17-million-triangle canopy untouched.
+    let components = 0;
+    for (let v = 0; v < vertCount; v++) if (parent[v] === v) components++;
+    if (components < 32) continue;
 
-      const componentCount = groups.size;
-      const averageTris = triCount / componentCount;
-      // A connected surface has one huge component; foliage has thousands of
-      // tiny ones. Anything averaging more than eight triangles per island is
-      // treated as solid geometry and left as it is.
-      if (componentCount < 32 || averageTris > 8) continue;
-
-      const keep = [];
-      let kept = 0;
-      let index = 0;
-      for (const [, tris] of groups) {
+    // Keep or drop per component, so a card is never half kept.
+    // 0 = undecided, 1 = keep, 2 = drop. A typed array rather than a Map:
+    // there are two million cards in a hero conifer and a Map of that many
+    // boxed entries costs more than every other buffer here put together.
+    const keepTri = new Uint8Array(triCount);
+    const verdicts = new Uint8Array(vertCount);
+    let kept = 0;
+    for (let t = 0; t < triCount; t++) {
+      const root = find(idx[t * 3]);
+      if (verdicts[root] === 0) {
         // Deterministic: the same asset culls the same way every build.
-        const roll = ((Math.imul(index + 1, 2654435761) >>> 0) % 100000) / 100000;
-        index++;
-        if (roll < keepRatio) {
-          keep.push(tris);
-          kept += tris.length;
-        }
+        const roll = ((Math.imul(root + 1, 2654435761) >>> 0) % 100000) / 100000;
+        verdicts[root] = roll < keepRatio ? 1 : 2;
       }
-      if (kept === 0 || kept === triCount) continue;
-
-      // Enlarge survivors to hold the canopy's density.
-      //
-      // Preserving total leaf *area* means growing by 1/sqrt(keepRatio), and
-      // for a scan that models every needle individually that factor is
-      // enormous. Capped, because a card blown up too far shows its needle
-      // texture at an obviously wrong scale when you walk right up to it — but
-      // capped generously, since without this the canopy culls away to a bare
-      // pole with a few green specks on it.
-      const grow = Math.min(2.2, 1 / Math.sqrt(Math.max(0.02, keepRatio)));
-      const pos = position.getArray();
-      const scaled = Float32Array.from(pos);
-      const seen = new Set();
-
-      for (const tris of keep) {
-        // Centroid of this card.
-        let cx = 0, cy = 0, cz = 0, n = 0;
-        const verts = new Set();
-        for (const t of tris) {
-          for (let k = 0; k < 3; k++) verts.add(idx[t * 3 + k]);
-        }
-        for (const v of verts) {
-          cx += pos[v * 3]; cy += pos[v * 3 + 1]; cz += pos[v * 3 + 2]; n++;
-        }
-        cx /= n; cy /= n; cz /= n;
-        for (const v of verts) {
-          if (seen.has(v)) continue;
-          seen.add(v);
-          scaled[v * 3] = cx + (pos[v * 3] - cx) * grow;
-          scaled[v * 3 + 1] = cy + (pos[v * 3 + 1] - cy) * grow;
-          scaled[v * 3 + 2] = cz + (pos[v * 3 + 2] - cz) * grow;
-        }
+      if (verdicts[root] === 1) {
+        keepTri[t] = 1;
+        kept++;
       }
+    }
+    if (!kept || kept === triCount) continue;
 
-      const newIndices = new Uint32Array(kept * 3);
-      let w = 0;
-      for (const tris of keep) {
-        for (const t of tris) {
-          newIndices[w++] = idx[t * 3];
-          newIndices[w++] = idx[t * 3 + 1];
-          newIndices[w++] = idx[t * 3 + 2];
-        }
+    // Centroid and radius of each surviving card, accumulated by root vertex.
+    const sum = new Float64Array(vertCount * 3);
+    const count = new Uint32Array(vertCount);
+    const seen = new Uint8Array(vertCount);
+    for (let t = 0; t < triCount; t++) {
+      if (!keepTri[t]) continue;
+      for (let k = 0; k < 3; k++) {
+        const v = idx[t * 3 + k];
+        if (seen[v]) continue;
+        seen[v] = 1;
+        const root = find(v);
+        sum[root * 3] += pos[v * 3];
+        sum[root * 3 + 1] += pos[v * 3 + 1];
+        sum[root * 3 + 2] += pos[v * 3 + 2];
+        count[root]++;
       }
+    }
+    for (let v = 0; v < vertCount; v++) {
+      if (!count[v]) continue;
+      sum[v * 3] /= count[v];
+      sum[v * 3 + 1] /= count[v];
+      sum[v * 3 + 2] /= count[v];
+    }
 
-      position.setArray(scaled);
-      indices.setArray(newIndices);
+    const radius = new Float32Array(vertCount);
+    for (let v = 0; v < vertCount; v++) {
+      if (!seen[v]) continue;
+      const root = find(v);
+      const d = Math.hypot(
+        pos[v * 3] - sum[root * 3],
+        pos[v * 3 + 1] - sum[root * 3 + 1],
+        pos[v * 3 + 2] - sum[root * 3 + 2]
+      );
+      if (d > radius[root]) radius[root] = d;
+    }
+
+    // Scale in place. Every surviving vertex belongs to exactly one card and
+    // the centroids are already computed, so there is no need for a copy.
+    for (let v = 0; v < vertCount; v++) {
+      if (!seen[v]) continue;
+      const root = find(v);
+      const r = radius[root];
+      const grow = r > 1e-6 ? Math.min(globalGrow, MAX_CARD_RADIUS / r) : globalGrow;
+      if (grow <= 1) continue;
+      pos[v * 3] = sum[root * 3] + (pos[v * 3] - sum[root * 3]) * grow;
+      pos[v * 3 + 1] = sum[root * 3 + 1] + (pos[v * 3 + 1] - sum[root * 3 + 1]) * grow;
+      pos[v * 3 + 2] = sum[root * 3 + 2] + (pos[v * 3 + 2] - sum[root * 3 + 2]) * grow;
+    }
+
+    const newIndices = new Uint32Array(kept * 3);
+    let w = 0;
+    for (let t = 0; t < triCount; t++) {
+      if (!keepTri[t]) continue;
+      newIndices[w++] = idx[t * 3];
+      newIndices[w++] = idx[t * 3 + 1];
+      newIndices[w++] = idx[t * 3 + 2];
+    }
+
+    position.setArray(pos);
+    indices.setArray(newIndices);
+
+    if (process.env.CARD_STATS) {
+      const radii = [];
+      for (let v = 0; v < vertCount; v++) if (radius[v] > 0) radii.push(radius[v]);
+      radii.sort((a, b) => a - b);
+      const median = radii[Math.floor(radii.length / 2)] ?? 0;
+      const applied = median > 1e-6 ? Math.min(globalGrow, MAX_CARD_RADIUS / median) : globalGrow;
+      console.log(
+        `    cards: ${components.toLocaleString()} islands, ${(triCount / components).toFixed(1)} tris each, ` +
+          `keep ${(keepRatio * 100).toFixed(1)}%, median radius ${(median * 100).toFixed(1)}cm, ` +
+          `grow wanted ${globalGrow.toFixed(1)}x applied ~${applied.toFixed(1)}x`
+      );
     }
   }
 }

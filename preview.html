@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  A single asset, on its own, at a known scale.
+
+  Every conifer bug in this project has cost more than it should have because
+  it was diagnosed inside a forest, where a broken tree is hidden behind two
+  hundred correct ones and the terrain, sky and impostor systems are all in the
+  frame arguing for attention. This page draws one model against a grid, lit
+  plainly, with a metre scale next to it.
+
+  Dev-only: Vite builds `index.html`, so this never reaches dist/.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asset preview</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #6a7a86; overflow: hidden; }
+      canvas { display: block; width: 100%; height: 100%; }
+      #label {
+        position: fixed; left: 12px; top: 10px;
+        font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div id="label"></div>
+    <script type="module" src="/src/preview.ts"></script>
+  </body>
+</html>

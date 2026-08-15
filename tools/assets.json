@@ -12,56 +12,308 @@
     "'res' is the texture resolution to fetch. 1k is plenty for anything scattered",
     "in bulk; the ground you stare at all day gets 2k."
   ],
-
   "textures": [
-    { "id": "meadow", "slug": "leafy_grass", "res": "2k", "note": "Meadow and open grass" },
-    { "id": "forest_floor", "slug": "forest_ground_04", "res": "2k", "note": "Needle and leaf litter under canopy" },
-    { "id": "rock", "slug": "rocky_terrain_02", "res": "2k", "note": "Exposed rock, cliffs and scree" },
-    { "id": "snow", "slug": "snow_02", "res": "2k", "note": "Snowfields above the snow line" }
+    {
+      "id": "meadow",
+      "slug": "leafy_grass",
+      "res": "2k",
+      "note": "Meadow and open grass"
+    },
+    {
+      "id": "forest_floor",
+      "slug": "forest_ground_04",
+      "res": "2k",
+      "note": "Needle and leaf litter under canopy"
+    },
+    {
+      "id": "rock",
+      "slug": "rocky_terrain_02",
+      "res": "2k",
+      "note": "Exposed rock, cliffs and scree"
+    },
+    {
+      "id": "snow",
+      "slug": "snow_02",
+      "res": "2k",
+      "note": "Snowfields above the snow line"
+    }
   ],
-
   "models": [
-    { "id": "fir_tree", "slug": "fir_tree_01", "res": "1k", "tris": 150000, "group": "canopy", "heavy": true },
-    { "id": "pine_tree", "slug": "pine_tree_01", "res": "1k", "tris": 150000, "group": "canopy", "heavy": true },
-    { "id": "broadleaf_tree", "slug": "tree_small_02", "res": "1k", "tris": 90000, "group": "canopy" },
-    { "id": "island_tree", "slug": "island_tree_01", "res": "1k", "tris": 90000, "group": "canopy" },
-    { "id": "fir_young", "slug": "fir_sapling_medium", "res": "1k", "tris": 30000, "group": "canopy" },
-    { "id": "pine_young", "slug": "pine_sapling_medium", "res": "1k", "tris": 30000, "group": "canopy", "heavy": true },
-    { "id": "fir_seedling", "slug": "fir_sapling", "res": "1k", "tris": 9000, "group": "understory" },
-    { "id": "dead_trunk", "slug": "dead_tree_trunk", "res": "1k", "tris": 8000, "group": "deadwood" },
-    { "id": "stump", "slug": "tree_stump_01", "res": "1k", "tris": 5000, "group": "deadwood" },
-    { "id": "stump_mossy", "slug": "tree_stump_02", "res": "1k", "tris": 5000, "group": "deadwood" },
-    { "id": "roots", "slug": "root_cluster_01", "res": "1k", "tris": 6000, "group": "deadwood" },
-    { "id": "pine_roots", "slug": "pine_roots", "res": "1k", "tris": 6000, "group": "deadwood" },
-
-    { "id": "fern", "slug": "fern_02", "res": "1k", "tris": 3000, "group": "understory" },
-    { "id": "shrub_a", "slug": "shrub_01", "res": "1k", "tris": 8000, "group": "understory" },
-    { "id": "shrub_b", "slug": "shrub_02", "res": "1k", "tris": 5000, "group": "understory" },
-    { "id": "shrub_c", "slug": "shrub_03", "res": "1k", "tris": 4000, "group": "understory" },
-    { "id": "shrub_d", "slug": "shrub_04", "res": "1k", "tris": 5000, "group": "understory" },
-    { "id": "nettle", "slug": "nettle_plant", "res": "1k", "tris": 4000, "group": "understory" },
-    { "id": "periwinkle", "slug": "periwinkle_plant", "res": "1k", "tris": 3000, "group": "understory" },
-    { "id": "sorrel", "slug": "shrub_sorrel_01", "res": "1k", "tris": 3000, "group": "understory" },
-    { "id": "moss", "slug": "moss_01", "res": "1k", "tris": 2500, "group": "ground" },
-    { "id": "grass_tuft", "slug": "grass_medium_01", "res": "1k", "tris": 2500, "group": "ground" },
-    { "id": "grass_tuft_b", "slug": "grass_medium_02", "res": "1k", "tris": 2500, "group": "ground" },
-    { "id": "grass_fine", "slug": "grass_bermuda_01", "res": "1k", "tris": 2000, "group": "ground" },
-
-    { "id": "gazania", "slug": "flower_gazania", "res": "1k", "tris": 2500, "group": "flower" },
-    { "id": "ursinia", "slug": "flower_ursinia", "res": "1k", "tris": 2500, "group": "flower" },
-    { "id": "heliophila", "slug": "flower_heliophila", "res": "1k", "tris": 2500, "group": "flower" },
-    { "id": "empodium", "slug": "flower_empodium", "res": "1k", "tris": 2000, "group": "flower" },
-    { "id": "stinkkruid", "slug": "flower_stinkkruid", "res": "1k", "tris": 2000, "group": "flower" },
-    { "id": "dandelion", "slug": "dandelion_01", "res": "1k", "tris": 2500, "group": "flower" },
-    { "id": "celandine", "slug": "celandine_01", "res": "1k", "tris": 2000, "group": "flower" },
-
-    { "id": "boulder", "slug": "boulder_01", "res": "1k", "tris": 4000, "group": "rock" },
-    { "id": "rock_a", "slug": "rock_07", "res": "1k", "tris": 2500, "group": "rock" },
-    { "id": "rock_b", "slug": "rock_09", "res": "1k", "tris": 2500, "group": "rock" },
-    { "id": "rock_mossy", "slug": "rock_moss_set_01", "res": "1k", "tris": 6000, "group": "rock" },
-    { "id": "boulder_pale", "slug": "namaqualand_boulder_03", "res": "1k", "tris": 3000, "group": "rock" },
-    { "id": "boulder_dark", "slug": "namaqualand_boulder_05", "res": "1k", "tris": 3000, "group": "rock" },
-    { "id": "stone", "slug": "stone_01", "res": "1k", "tris": 1500, "group": "rock" },
-    { "id": "cliff", "slug": "coastal_cliff_01", "res": "1k", "tris": 12000, "group": "rock" }
+    {
+      "id": "fir_tree",
+      "slug": "fir_tree_01",
+      "res": "1k",
+      "tris": 320000,
+      "group": "canopy",
+      "heavy": true
+    },
+    {
+      "id": "pine_tree",
+      "slug": "pine_tree_01",
+      "res": "1k",
+      "tris": 320000,
+      "group": "canopy",
+      "heavy": true
+    },
+    {
+      "id": "broadleaf_tree",
+      "slug": "tree_small_02",
+      "res": "1k",
+      "tris": 90000,
+      "group": "canopy"
+    },
+    {
+      "id": "island_tree",
+      "slug": "island_tree_01",
+      "res": "1k",
+      "tris": 90000,
+      "group": "canopy"
+    },
+    {
+      "id": "fir_young",
+      "slug": "fir_sapling_medium",
+      "res": "1k",
+      "tris": 60000,
+      "group": "canopy"
+    },
+    {
+      "id": "pine_young",
+      "slug": "pine_sapling_medium",
+      "res": "1k",
+      "tris": 60000,
+      "group": "canopy",
+      "heavy": true
+    },
+    {
+      "id": "fir_seedling",
+      "slug": "fir_sapling",
+      "res": "1k",
+      "tris": 18000,
+      "group": "understory"
+    },
+    {
+      "id": "dead_trunk",
+      "slug": "dead_tree_trunk",
+      "res": "1k",
+      "tris": 8000,
+      "group": "deadwood"
+    },
+    {
+      "id": "stump",
+      "slug": "tree_stump_01",
+      "res": "1k",
+      "tris": 5000,
+      "group": "deadwood"
+    },
+    {
+      "id": "stump_mossy",
+      "slug": "tree_stump_02",
+      "res": "1k",
+      "tris": 5000,
+      "group": "deadwood"
+    },
+    {
+      "id": "roots",
+      "slug": "root_cluster_01",
+      "res": "1k",
+      "tris": 6000,
+      "group": "deadwood"
+    },
+    {
+      "id": "pine_roots",
+      "slug": "pine_roots",
+      "res": "1k",
+      "tris": 6000,
+      "group": "deadwood"
+    },
+    {
+      "id": "fern",
+      "slug": "fern_02",
+      "res": "1k",
+      "tris": 3000,
+      "group": "understory"
+    },
+    {
+      "id": "shrub_a",
+      "slug": "shrub_01",
+      "res": "1k",
+      "tris": 8000,
+      "group": "understory"
+    },
+    {
+      "id": "shrub_b",
+      "slug": "shrub_02",
+      "res": "1k",
+      "tris": 5000,
+      "group": "understory"
+    },
+    {
+      "id": "shrub_c",
+      "slug": "shrub_03",
+      "res": "1k",
+      "tris": 4000,
+      "group": "understory"
+    },
+    {
+      "id": "shrub_d",
+      "slug": "shrub_04",
+      "res": "1k",
+      "tris": 5000,
+      "group": "understory"
+    },
+    {
+      "id": "nettle",
+      "slug": "nettle_plant",
+      "res": "1k",
+      "tris": 4000,
+      "group": "understory"
+    },
+    {
+      "id": "periwinkle",
+      "slug": "periwinkle_plant",
+      "res": "1k",
+      "tris": 3000,
+      "group": "understory"
+    },
+    {
+      "id": "sorrel",
+      "slug": "shrub_sorrel_01",
+      "res": "1k",
+      "tris": 3000,
+      "group": "understory"
+    },
+    {
+      "id": "moss",
+      "slug": "moss_01",
+      "res": "1k",
+      "tris": 2500,
+      "group": "ground"
+    },
+    {
+      "id": "grass_tuft",
+      "slug": "grass_medium_01",
+      "res": "1k",
+      "tris": 2500,
+      "group": "ground"
+    },
+    {
+      "id": "grass_tuft_b",
+      "slug": "grass_medium_02",
+      "res": "1k",
+      "tris": 2500,
+      "group": "ground"
+    },
+    {
+      "id": "grass_fine",
+      "slug": "grass_bermuda_01",
+      "res": "1k",
+      "tris": 2000,
+      "group": "ground"
+    },
+    {
+      "id": "gazania",
+      "slug": "flower_gazania",
+      "res": "1k",
+      "tris": 2500,
+      "group": "flower"
+    },
+    {
+      "id": "ursinia",
+      "slug": "flower_ursinia",
+      "res": "1k",
+      "tris": 2500,
+      "group": "flower"
+    },
+    {
+      "id": "heliophila",
+      "slug": "flower_heliophila",
+      "res": "1k",
+      "tris": 2500,
+      "group": "flower"
+    },
+    {
+      "id": "empodium",
+      "slug": "flower_empodium",
+      "res": "1k",
+      "tris": 2000,
+      "group": "flower"
+    },
+    {
+      "id": "stinkkruid",
+      "slug": "flower_stinkkruid",
+      "res": "1k",
+      "tris": 2000,
+      "group": "flower"
+    },
+    {
+      "id": "dandelion",
+      "slug": "dandelion_01",
+      "res": "1k",
+      "tris": 2500,
+      "group": "flower"
+    },
+    {
+      "id": "celandine",
+      "slug": "celandine_01",
+      "res": "1k",
+      "tris": 2000,
+      "group": "flower"
+    },
+    {
+      "id": "boulder",
+      "slug": "boulder_01",
+      "res": "1k",
+      "tris": 4000,
+      "group": "rock"
+    },
+    {
+      "id": "rock_a",
+      "slug": "rock_07",
+      "res": "1k",
+      "tris": 2500,
+      "group": "rock"
+    },
+    {
+      "id": "rock_b",
+      "slug": "rock_09",
+      "res": "1k",
+      "tris": 2500,
+      "group": "rock"
+    },
+    {
+      "id": "rock_mossy",
+      "slug": "rock_moss_set_01",
+      "res": "1k",
+      "tris": 6000,
+      "group": "rock"
+    },
+    {
+      "id": "boulder_pale",
+      "slug": "namaqualand_boulder_03",
+      "res": "1k",
+      "tris": 3000,
+      "group": "rock"
+    },
+    {
+      "id": "boulder_dark",
+      "slug": "namaqualand_boulder_05",
+      "res": "1k",
+      "tris": 3000,
+      "group": "rock"
+    },
+    {
+      "id": "stone",
+      "slug": "stone_01",
+      "res": "1k",
+      "tris": 1500,
+      "group": "rock"
+    },
+    {
+      "id": "cliff",
+      "slug": "coastal_cliff_01",
+      "res": "1k",
+      "tris": 12000,
+      "group": "rock"
+    }
   ]
 }

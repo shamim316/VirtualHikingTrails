@@ -20,7 +20,7 @@
     "bytes": 786788
   },
   {
-    "file": "blackbird_0.ogg",
+    "file": "blackbird_0.mp3",
     "id": "blackbird",
     "role": "dawn",
     "title": "Turdus merula 2",
@@ -60,7 +60,7 @@
     "bytes": 201145
   },
   {
-    "file": "wren_0.ogg",
+    "file": "wren_0.mp3",
     "id": "wren",
     "role": "day",
     "title": "Troglodytes troglodytes - Eurasian Wren XC125791",
@@ -120,7 +120,7 @@
     "bytes": 615240
   },
   {
-    "file": "cuckoo_0.ogg",
+    "file": "cuckoo_0.mp3",
     "id": "cuckoo",
     "role": "day",
     "title": "Cuculus canorus song",
@@ -130,7 +130,7 @@
     "bytes": 380944
   },
   {
-    "file": "raven_0.ogg",
+    "file": "raven_0.mp3",
     "id": "raven",
     "role": "high",
     "title": "Common Raven",
@@ -140,7 +140,7 @@
     "bytes": 196941
   },
   {
-    "file": "buzzard_0.ogg",
+    "file": "buzzard_0.mp3",
     "id": "buzzard",
     "role": "high",
     "title": "Buteo buteo warning the fledglings 7643",
@@ -170,7 +170,7 @@
     "bytes": 445841
   },
   {
-    "file": "woodpecker_0.ogg",
+    "file": "woodpecker_0.mp3",
     "id": "woodpecker",
     "role": "day",
     "title": "Buntspecht (Dendrocopos major), bettelnde Jungvögel",

@@ -1,12 +1,464 @@
 [
   {
+    "id": "meadow_diff",
+    "kind": "texture",
+    "before": 4766204,
+    "after": 354288
+  },
+  {
+    "id": "meadow_nor",
+    "kind": "texture",
+    "before": 6047262,
+    "after": 636332
+  },
+  {
+    "id": "meadow_arm",
+    "kind": "texture",
+    "before": 4116600,
+    "after": 273030
+  },
+  {
+    "id": "forest_floor_diff",
+    "kind": "texture",
+    "before": 4529321,
+    "after": 341956
+  },
+  {
+    "id": "forest_floor_nor",
+    "kind": "texture",
+    "before": 5288849,
+    "after": 548082
+  },
+  {
+    "id": "forest_floor_arm",
+    "kind": "texture",
+    "before": 3418726,
+    "after": 185042
+  },
+  {
+    "id": "rock_diff",
+    "kind": "texture",
+    "before": 3232826,
+    "after": 160304
+  },
+  {
+    "id": "rock_nor",
+    "kind": "texture",
+    "before": 4149208,
+    "after": 355216
+  },
+  {
+    "id": "rock_arm",
+    "kind": "texture",
+    "before": 1960945,
+    "after": 46012
+  },
+  {
+    "id": "snow_diff",
+    "kind": "texture",
+    "before": 1314409,
+    "after": 73090
+  },
+  {
+    "id": "snow_nor",
+    "kind": "texture",
+    "before": 4761595,
+    "after": 420262
+  },
+  {
+    "id": "snow_arm",
+    "kind": "texture",
+    "before": 390341,
+    "after": 40706
+  },
+  {
     "id": "fir_tree",
     "kind": "model",
     "group": "canopy",
     "rawBytes": 487358833,
     "before": 6982937,
-    "after": 150007,
-    "after_bytes": 11384200,
+    "after": 317606,
+    "after_bytes": 17552620,
     "variants": 3
+  },
+  {
+    "id": "pine_tree",
+    "kind": "model",
+    "group": "canopy",
+    "rawBytes": 958118530,
+    "before": 17182252,
+    "after": 314890,
+    "after_bytes": 18961596,
+    "variants": 3
+  },
+  {
+    "id": "broadleaf_tree",
+    "kind": "model",
+    "group": "canopy",
+    "rawBytes": 100974143,
+    "before": 2062487,
+    "after": 93352,
+    "after_bytes": 4645748,
+    "variants": 1
+  },
+  {
+    "id": "island_tree",
+    "kind": "model",
+    "group": "canopy",
+    "rawBytes": 66337268,
+    "before": 1599403,
+    "after": 119026,
+    "after_bytes": 6746632,
+    "variants": 1
+  },
+  {
+    "id": "fir_young",
+    "kind": "model",
+    "group": "canopy",
+    "rawBytes": 78056936,
+    "before": 1533513,
+    "after": 60127,
+    "after_bytes": 4473300,
+    "variants": 3
+  },
+  {
+    "id": "pine_young",
+    "kind": "model",
+    "group": "canopy",
+    "rawBytes": 267824443,
+    "before": 6038139,
+    "after": 58619,
+    "after_bytes": 3989012,
+    "variants": 3
+  },
+  {
+    "id": "fir_seedling",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 25423602,
+    "before": 433021,
+    "after": 18153,
+    "after_bytes": 2043068,
+    "variants": 3
+  },
+  {
+    "id": "dead_trunk",
+    "kind": "model",
+    "group": "deadwood",
+    "rawBytes": 4787539,
+    "before": 101802,
+    "after": 7999,
+    "after_bytes": 699920,
+    "variants": 1
+  },
+  {
+    "id": "stump",
+    "kind": "model",
+    "group": "deadwood",
+    "rawBytes": 3939674,
+    "before": 41046,
+    "after": 4996,
+    "after_bytes": 1266020,
+    "variants": 1
+  },
+  {
+    "id": "stump_mossy",
+    "kind": "model",
+    "group": "deadwood",
+    "rawBytes": 4469340,
+    "before": 62345,
+    "after": 4991,
+    "after_bytes": 913684,
+    "variants": 1
+  },
+  {
+    "id": "roots",
+    "kind": "model",
+    "group": "deadwood",
+    "rawBytes": 9453108,
+    "before": 225261,
+    "after": 5986,
+    "after_bytes": 895356,
+    "variants": 1
+  },
+  {
+    "id": "pine_roots",
+    "kind": "model",
+    "group": "deadwood",
+    "rawBytes": 9702901,
+    "before": 162693,
+    "after": 5995,
+    "after_bytes": 1749140,
+    "variants": 2
+  },
+  {
+    "id": "fern",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 1146361,
+    "before": 6232,
+    "after": 2994,
+    "after_bytes": 261620,
+    "variants": 4
+  },
+  {
+    "id": "shrub_a",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 6877527,
+    "before": 156012,
+    "after": 8000,
+    "after_bytes": 532412,
+    "variants": 1
+  },
+  {
+    "id": "shrub_b",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 1966425,
+    "before": 27254,
+    "after": 4938,
+    "after_bytes": 582572,
+    "variants": 4
+  },
+  {
+    "id": "shrub_c",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 1628793,
+    "before": 8287,
+    "after": 3993,
+    "after_bytes": 371348,
+    "variants": 4
+  },
+  {
+    "id": "shrub_d",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 1907514,
+    "before": 27327,
+    "after": 4835,
+    "after_bytes": 563808,
+    "variants": 1
+  },
+  {
+    "id": "nettle",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 2477565,
+    "before": 31304,
+    "after": 3992,
+    "after_bytes": 527568,
+    "variants": 4
+  },
+  {
+    "id": "periwinkle",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 2924921,
+    "before": 34350,
+    "after": 4416,
+    "after_bytes": 620228,
+    "variants": 4
+  },
+  {
+    "id": "sorrel",
+    "kind": "model",
+    "group": "understory",
+    "rawBytes": 1186333,
+    "before": 3319,
+    "after": 1199,
+    "after_bytes": 178856,
+    "variants": 4
+  },
+  {
+    "id": "moss",
+    "kind": "model",
+    "group": "ground",
+    "rawBytes": 921103,
+    "before": 204,
+    "after": 80,
+    "after_bytes": 155456,
+    "variants": 4
+  },
+  {
+    "id": "grass_tuft",
+    "kind": "model",
+    "group": "ground",
+    "rawBytes": 3065099,
+    "before": 24730,
+    "after": 2542,
+    "after_bytes": 656636,
+    "variants": 4
+  },
+  {
+    "id": "grass_tuft_b",
+    "kind": "model",
+    "group": "ground",
+    "rawBytes": 801474,
+    "before": 7842,
+    "after": 2497,
+    "after_bytes": 204620,
+    "variants": 4
+  },
+  {
+    "id": "grass_fine",
+    "kind": "model",
+    "group": "ground",
+    "rawBytes": 1450530,
+    "before": 941,
+    "after": 60,
+    "after_bytes": 257708,
+    "variants": 4
+  },
+  {
+    "id": "gazania",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 2848844,
+    "before": 14340,
+    "after": 2493,
+    "after_bytes": 489032,
+    "variants": 4
+  },
+  {
+    "id": "ursinia",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 2095182,
+    "before": 24933,
+    "after": 2622,
+    "after_bytes": 322208,
+    "variants": 4
+  },
+  {
+    "id": "heliophila",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 3849137,
+    "before": 101621,
+    "after": 2250,
+    "after_bytes": 232924,
+    "variants": 3
+  },
+  {
+    "id": "empodium",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 898227,
+    "before": 3053,
+    "after": 1998,
+    "after_bytes": 191956,
+    "variants": 4
+  },
+  {
+    "id": "stinkkruid",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 4781035,
+    "before": 80716,
+    "after": 3513,
+    "after_bytes": 450564,
+    "variants": 4
+  },
+  {
+    "id": "dandelion",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 3099944,
+    "before": 54764,
+    "after": 6388,
+    "after_bytes": 456940,
+    "variants": 4
+  },
+  {
+    "id": "celandine",
+    "kind": "model",
+    "group": "flower",
+    "rawBytes": 1525568,
+    "before": 8966,
+    "after": 2083,
+    "after_bytes": 357584,
+    "variants": 4
+  },
+  {
+    "id": "boulder",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 5771986,
+    "before": 66122,
+    "after": 3999,
+    "after_bytes": 806488,
+    "variants": 1
+  },
+  {
+    "id": "rock_a",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 2184088,
+    "before": 14844,
+    "after": 2499,
+    "after_bytes": 508688,
+    "variants": 1
+  },
+  {
+    "id": "rock_b",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 1964421,
+    "before": 12416,
+    "after": 2500,
+    "after_bytes": 460820,
+    "variants": 1
+  },
+  {
+    "id": "rock_mossy",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 1937065,
+    "before": 63127,
+    "after": 6170,
+    "after_bytes": 786548,
+    "variants": 4
+  },
+  {
+    "id": "boulder_pale",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 3778955,
+    "before": 64826,
+    "after": 2999,
+    "after_bytes": 557392,
+    "variants": 1
+  },
+  {
+    "id": "boulder_dark",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 4699992,
+    "before": 89618,
+    "after": 3000,
+    "after_bytes": 733824,
+    "variants": 1
+  },
+  {
+    "id": "stone",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 3724420,
+    "before": 53520,
+    "after": 1730,
+    "after_bytes": 593680,
+    "variants": 1
+  },
+  {
+    "id": "cliff",
+    "kind": "model",
+    "group": "rock",
+    "rawBytes": 15376631,
+    "before": 461824,
+    "after": 11997,
+    "after_bytes": 638796,
+    "variants": 1
   }
 ]
