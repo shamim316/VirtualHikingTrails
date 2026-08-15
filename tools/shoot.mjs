@@ -126,6 +126,59 @@ if ('forest' in args) {
   console.log(where ? `forest spot (${where.x.toFixed(0)}, ${where.z.toFixed(0)}) canopy=${where.canopy.toFixed(2)} h=${where.h.toFixed(0)}m biome=${where.biome}` : 'no forest found');
 }
 
+if (args.weather) {
+  // Force a weather state and let it ease in, so the cloud deck and the light
+  // can be judged under something other than the default fair day.
+  await page.evaluate((kind) => {
+    const weather = window.hiking.weather;
+    weather.setKind(kind);
+    // The smoothed overcast/rain/haze values ease over minutes, which is right
+    // in play and useless in a screenshot. Run the state machine forward until
+    // it has actually arrived. The clock it advances is overwritten below.
+    for (let i = 0; i < 600; i++) weather.update(0.5);
+    weather.setKind(kind);
+  }, args.weather);
+}
+
+if ('water' in args) {
+  // Stand on the bank of the liveliest water within a few kilometres, facing
+  // it. Water is the one subsystem you cannot judge from a forest viewpoint.
+  const where = await page.evaluate((wantFall) => {
+    const engine = window.hiking;
+    const field = engine.terrain.field;
+    let best = null;
+    for (let i = 0; i < 9000; i++) {
+      const angle = i * 2.39996;
+      const radius = Math.sqrt(i) * 22;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const s = field.sample(x, z);
+      if (s.waterHeight <= s.height) continue;
+      // A waterfall is fast water on steep ground; a tarn is the opposite.
+      const score = wantFall
+        ? s.riverT * 3 + s.slope * 6 - radius * 0.0005
+        : s.riverT * 2 + (1 - s.slope) * 2 - radius * 0.0008;
+      if (!best || score > best.score) best = { x, z, score, slope: s.slope, riverT: s.riverT };
+    }
+    if (!best) return null;
+    // Step back onto dry land so the camera isn't underwater, then look at it.
+    let px = best.x;
+    let pz = best.z;
+    for (let step = 0; step < 40; step++) {
+      const h = field.height(px, pz);
+      if (field.waterHeight(px, pz) <= h + 0.1) break;
+      px += 1.5;
+      pz += 1.0;
+    }
+    const yaw = Math.atan2(-(best.x - px), -(best.z - pz));
+    engine.player.placeAt(px, pz, yaw);
+    return { ...best, px, pz };
+  }, 'waterfall' in args);
+  console.log(where
+    ? `water at (${where.px.toFixed(0)}, ${where.pz.toFixed(0)}) riverT=${where.riverT.toFixed(2)} slope=${where.slope.toFixed(2)}`
+    : 'no water found');
+}
+
 if (WALK > 0) {
   console.log(`walking ${WALK}m...`);
   await page.evaluate(async (metres) => {
@@ -169,8 +222,10 @@ for (const hour of HOURS) {
   await page.waitForTimeout(Number(args.ease ?? 9000));
 
   const stats = await page.evaluate(() => ({ ...window.hiking.stats }));
-  const mode = ['rest', 'photo', 'journal', 'settings', 'splash'].find((m) => m in args);
-  const label = `${MOBILE ? 'mobile-' : ''}${mode ? `${mode}-` : ''}h${String(hour).replace('.', '_')}`;
+  const mode = ['rest', 'photo', 'journal', 'settings', 'splash', 'water', 'waterfall'].find((m) => m in args);
+  const label =
+    `${MOBILE ? 'mobile-' : ''}${mode ? `${mode}-` : ''}` +
+    `${args.weather ? `${args.weather}-` : ''}h${String(hour).replace('.', '_')}`;
   const file = path.join(OUT, `${label}.png`);
   await page.screenshot({ path: file, timeout: 180_000 });
   report.push({ hour, file, ...stats });

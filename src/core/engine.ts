@@ -263,6 +263,8 @@ export class Engine {
         season: this.weather.state.season,
         overcast: this.weather.state.overcast,
         haze: this.weather.state.haze,
+        wind: this.weather.state.wind,
+        windDirection: this.weather.state.windDirection,
       },
       dt,
       this.renderer,
@@ -346,7 +348,11 @@ export class Engine {
     const w = this.weather.state;
     const fog = this.scene.fog as THREE.FogExp2 | null;
     if (fog) fog.color.copy(this.sky.horizonColor);
-    const targetDensity = lerp(0.00022, 0.0016, clamp01(w.haze)) + w.rain * 0.0006;
+    // Clear air really does let you see thirty kilometres. The old floor of
+    // 0.00022 put a 1.5km ridge at 86% fogged on a fine day, which flattened
+    // every distant mountain to a pale silhouette and threw away the one view
+    // a hiking game exists for.
+    const targetDensity = lerp(0.00010, 0.0015, clamp01(w.haze)) + w.rain * 0.0007;
     // Scale with view distance so the horizon fades at the same visual point
     // regardless of quality tier.
     const scaled = targetDensity * (3200 / this.settings.viewDistance);

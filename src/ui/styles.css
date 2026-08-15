@@ -263,7 +263,7 @@ kbd {
   left: 0;
   padding-right: 5rem;
   padding-bottom: 3rem;
-  background: radial-gradient(90% 100% at 0% 0%, rgba(4, 8, 6, 0.62), transparent 74%);
+  background: radial-gradient(90% 100% at 0% 0%, rgba(4, 8, 6, 0.72), transparent 78%);
 }
 
 .top-right {
@@ -272,7 +272,7 @@ kbd {
   text-align: right;
   padding-left: 5rem;
   padding-bottom: 3rem;
-  background: radial-gradient(90% 100% at 100% 0%, rgba(4, 8, 6, 0.62), transparent 74%);
+  background: radial-gradient(90% 100% at 100% 0%, rgba(4, 8, 6, 0.72), transparent 78%);
 }
 
 .bottom-left {
@@ -280,7 +280,7 @@ kbd {
   left: 0;
   padding-right: 5rem;
   padding-top: 3rem;
-  background: radial-gradient(90% 100% at 0% 100%, rgba(4, 8, 6, 0.62), transparent 74%);
+  background: radial-gradient(90% 100% at 0% 100%, rgba(4, 8, 6, 0.72), transparent 78%);
 }
 
 .clock {
@@ -297,7 +297,7 @@ kbd {
   font-size: 0.78rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: rgba(240, 236, 225, 0.66);
+  color: rgba(240, 236, 225, 0.78);
 }
 
 .compass {

@@ -47,6 +47,10 @@ uniform float uMoonPhase;    // 0 = new, 1 = full
 uniform float uStarFade;
 uniform vec3 uGroundColor;
 uniform float uHaze;
+uniform float uCloudCover;   // 0 = empty sky, 1 = solid overcast
+uniform float uCloudTime;    // wind-advected offset, in cloud-plane units
+uniform vec2 uCloudDrift;    // unit wind bearing
+uniform float uCloudSharp;   // low = soft stratus, high = crisp cumulus
 
 const float PI = 3.141592653589793;
 const vec3 UP = vec3(0.0, 1.0, 0.0);
@@ -103,6 +107,70 @@ float starField(vec3 dir) {
 
   // A slight colour spread between hot blue and cool orange stars.
   return star;
+}
+
+// --- clouds ----------------------------------------------------------------
+//
+// A single flat layer, ray-marched not at all: the view ray is intersected
+// with a plane and the density is one fBm lookup. That is enough, because a
+// cloud deck seen from underneath really is a two-dimensional pattern — the
+// volumetric detail you would pay for is all on the far side.
+//
+// The cost of the flat-plane trick is that clouds pile up toward the horizon,
+// where the ray travels a long way before it reaches the plane. That is also
+// what real cloud decks do, so it is allowed to happen and then faded out into
+// the haze rather than corrected.
+
+float valueNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash13(vec3(i, 0.0));
+  float b = hash13(vec3(i + vec2(1.0, 0.0), 0.0));
+  float c = hash13(vec3(i + vec2(0.0, 1.0), 0.0));
+  float d = hash13(vec3(i + vec2(1.0, 1.0), 0.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float cloudFbm(vec2 p) {
+  float sum = 0.0;
+  float amplitude = 0.5;
+  // Five octaves with a non-integer lacunarity, so the layers never line up
+  // into a visible grid the way 2.0 does on a flat plane.
+  for (int i = 0; i < 5; i++) {
+    sum += valueNoise(p) * amplitude;
+    p = p * 2.13 + vec2(17.3, 9.1);
+    amplitude *= 0.5;
+  }
+  return sum;
+}
+
+// Returns (coverage, self-shadowing) for the cloud deck along the view ray.
+vec2 cloudLayer(vec3 dir, vec3 sunDir) {
+  if (dir.y <= 0.012) return vec2(0.0);
+
+  // Plane at unit height; the ray parameter is what makes distant cloud
+  // compress toward the horizon.
+  float t = 1.0 / dir.y;
+  vec2 p = dir.xz * t * 1.35 + uCloudDrift * uCloudTime;
+
+  float density = cloudFbm(p);
+  // Coverage as a threshold on the noise, so raising it grows existing clouds
+  // outward instead of fading in a uniform grey film.
+  float threshold = mix(0.72, 0.24, uCloudCover);
+  float coverage = smoothstep(threshold, threshold + mix(0.30, 0.09, uCloudSharp), density);
+
+  // Sample again a short way toward the sun. Where that neighbour is denser,
+  // this bit of cloud is in the shadow of the bit next to it — which is most
+  // of what gives a cumulus its shape.
+  vec2 toSun = normalize(sunDir.xz + vec2(1e-4, 0.0)) * 0.16;
+  float lit = cloudFbm(p + toSun);
+  float shadow = clamp((lit - density) * 1.8 + 0.5, 0.0, 1.0);
+
+  // Fade out along the last few degrees above the horizon, where the plane
+  // approximation stops being anything at all.
+  coverage *= smoothstep(0.012, 0.14, dir.y);
+  return vec2(coverage, shadow);
 }
 
 vec3 starColor(vec3 dir) {
@@ -196,14 +264,44 @@ void main() {
 
   vec3 color = mix(day, night, uNight);
 
+  // --- cloud deck -----------------------------------------------------------
+  // Composited over the sky rather than added to it, because a cloud is opaque:
+  // it replaces the atmosphere behind it instead of glowing in front of it.
+  vec2 cloud = cloudLayer(dir, uSunDir);
+  if (cloud.x > 0.001) {
+    // The lit top and the shadowed base of the same cloud, in the light of
+    // whatever time of day it is. Base colour comes from the sky at the
+    // horizon, which is why clouds go pink at sunset without being told to.
+    float sunHeight = clamp(uSunDir.y, 0.0, 1.0);
+    vec3 sunTint = mix(vec3(1.0, 0.55, 0.30), vec3(1.0, 0.97, 0.92), smoothstep(0.0, 0.32, sunHeight));
+    vec3 lit = sunTint * mix(0.06, 1.35, sunHeight) * (1.0 - uNight * 0.86);
+    vec3 base = mix(lit * 0.28, vec3(0.05, 0.06, 0.09), 0.45) + color * 0.55;
+
+    vec3 cloudColor = mix(base, lit, cloud.y);
+    // Moonlit cloud, so the night sky isn't a hole where the deck should be.
+    cloudColor = mix(cloudColor, vec3(0.055, 0.062, 0.082) + vec3(0.10) * cloud.y * uMoonPhase, uNight);
+
+    // Thin cloud at the edges lets the sky through; thick cloud does not.
+    float opacity = cloud.x * mix(0.72, 0.99, uCloudCover);
+    color = mix(color, cloudColor, opacity);
+  }
+
   // --- below the horizon ----------------------------------------------------
   // Past the last loaded terrain you are looking at the underside of the dome,
   // so this has to read as distant hazy land rather than as a hole. Start from
   // the sky's own colour at the horizon, tint it earthward, and let it fall off
   // slowly — the same thing aerial perspective does to a far-off valley floor.
-  float groundBlend = smoothstep(0.0, -0.16, up);
-  vec3 horizonHaze = color;
-  vec3 ground = mix(horizonHaze, horizonHaze * uGroundColor * 3.0, 0.7) * mix(0.5, 0.28, uNight);
+  // Very distant land is not a colour of its own. It is the same air, warmed
+  // and darkened a little by whatever lies under it — which is why a twenty
+  // kilometre view reads as depth rather than as a surface. Tinting it 70% of
+  // the way to a brown ground colour, as this used to, turned the whole lower
+  // half of a summit view into a flat olive wash.
+  float groundBlend = smoothstep(0.0, -0.20, up);
+  // The balance to hold: tint it too far toward the ground colour and a summit
+  // view is a flat olive wash; leave it as the sky and the horizon line
+  // disappears into a white band. Half way, plus a real darkening, gives the
+  // pale warm-grey a distant range actually is.
+  vec3 ground = mix(color, color * uGroundColor * 3.4, 0.5) * mix(0.72, 0.32, uNight);
   color = mix(color, ground, groundBlend);
 
   // Belt and braces for the environment capture: no negatives, no infinities,
@@ -223,6 +321,9 @@ export interface SkyState {
   overcast: number;
   /** Extra atmospheric haze, raised by mist and rain. */
   haze: number;
+  /** 0..1 wind strength and its bearing in radians; the cloud deck drifts. */
+  wind: number;
+  windDirection: number;
 }
 
 export class Sky {
@@ -245,6 +346,7 @@ export class Sky {
   private envScene = new THREE.Scene();
   private envAccumulator = 0;
   private lastEnvNight = -1;
+  private cloudTime = 0;
 
   constructor(renderer: THREE.WebGLRenderer) {
     this.material = new THREE.ShaderMaterial({
@@ -266,8 +368,12 @@ export class Sky {
         uNight: { value: 0 },
         uMoonPhase: { value: 0.85 },
         uStarFade: { value: 0 },
-        uGroundColor: { value: new THREE.Color(0.16, 0.15, 0.12) },
+        uGroundColor: { value: new THREE.Color(0.185, 0.183, 0.172) },
         uHaze: { value: 0 },
+        uCloudCover: { value: 0.35 },
+        uCloudTime: { value: 0 },
+        uCloudDrift: { value: new THREE.Vector2(1, 0) },
+        uCloudSharp: { value: 0.7 },
       },
     });
 
@@ -342,6 +448,18 @@ export class Sky {
     u.uRayleigh.value = lerp(1.45, 0.5, state.overcast);
     u.uMieCoefficient.value = lerp(0.004, 0.021, state.overcast);
     u.uMieG.value = lerp(0.81, 0.72, state.overcast);
+
+    // --- cloud deck ---------------------------------------------------------
+    // Even a "clear" sky gets a little fair-weather cumulus: an entirely empty
+    // sky reads as a missing feature rather than as good weather.
+    u.uCloudCover.value = lerp(0.22, 0.94, state.overcast) + state.haze * 0.1;
+    // Overcast is a flat stratus sheet; clear weather is crisp-edged cumulus.
+    u.uCloudSharp.value = lerp(0.85, 0.25, state.overcast);
+    u.uCloudDrift.value.set(Math.cos(state.windDirection), Math.sin(state.windDirection));
+    // Slow. Cloud that visibly races across the sky is the single fastest way
+    // to make a calm place feel hurried.
+    this.cloudTime += dt * (0.0016 + state.wind * 0.0075);
+    u.uCloudTime.value = this.cloudTime;
 
     this.updateLights(state);
     this.updateEnvironment(dt, renderer, scene, state);
