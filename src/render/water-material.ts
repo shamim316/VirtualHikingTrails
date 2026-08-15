@@ -153,9 +153,16 @@ export function createWaterMaterial(): WaterMaterial {
         vec3 waterColor = mix(uShallowColor, uDeepColor, depthT);
 
         // Foam: along banks, and wherever the water is being thrown about.
-        float foamNoise = waterNoise(vWorldPos.xz * 3.2 - drift * uTime * max(speed, 0.4) * 1.4);
+        // Two scales, both advected downstream. One is enough to say "foam"
+        // and not enough to say "moving water": a single octave makes a
+        // cascade read as a ribbon of paper laid on the hillside.
+        vec2 foamDrift = drift * uTime * max(speed, 0.4);
+        float foamNoise = waterNoise(vWorldPos.xz * 3.2 - foamDrift * 1.4) * 0.65
+                        + waterNoise(vWorldPos.xz * 11.0 - foamDrift * 2.6) * 0.35;
         float bankFoam = smoothstep(0.55, 1.0, shoreT) * (0.35 + foamNoise * 0.75);
-        float rapidFoam = smoothstep(0.25, 0.95, white) * (0.4 + foamNoise * 0.9);
+        // Threshold and spread widened so a fast reach is broken water rather
+        // than a solid white sheet; only a genuine fall goes fully white.
+        float rapidFoam = smoothstep(0.30, 1.0, white) * (0.22 + foamNoise * 0.95);
         float foam = clamp(max(bankFoam * 0.75, rapidFoam), 0.0, 1.0);
 
         diffuseColor.rgb *= mix(waterColor, uFoamColor, foam);

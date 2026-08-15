@@ -257,7 +257,11 @@ function buildWater(step: number) {
     const depth = Math.max(0, h - ground);
     // Foam where it's shallow, and whitewater where it's steep.
     const shore = 1 - Math.min(1, depth / 0.5);
-    const white = Math.min(1, gradient * 3.2);
+    // Whitewater needs a threshold and a gentler ramp. At `gradient * 3.2`
+    // anything past a 17 degree fall was 100% white, so every hill stream in
+    // the world was a flat paper ribbon rather than water with fast reaches
+    // and slack ones.
+    const white = Math.min(1, Math.max(0, gradient - 0.07) * 1.9);
 
     positions.push(i * step, h, j * step);
     flow.push(-dx / len, -dz / len, speed);
