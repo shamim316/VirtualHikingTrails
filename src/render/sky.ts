@@ -353,13 +353,13 @@ export class Sky {
     this.sunLight.position.copy(this.sunDirection).multiplyScalar(600);
 
     const moonUp = clamp01(smoothstep(-0.05, 0.2, this.moonDirection.y));
-    this.moonLight.intensity = moonUp * this.night * 0.32 * cloudDim;
+    this.moonLight.intensity = moonUp * this.night * 0.8 * cloudDim;
     this.moonLight.position.copy(this.moonDirection).multiplyScalar(600);
 
     // Ambient sky/ground bounce. Kept deliberately low: the environment map
     // carries nearly all of the indirect light, and this only exists as a floor
     // so that deep shade never goes flat black.
-    const ambientStrength = lerp(0.04, 0.2, daylight) * lerp(1, 1.5, state.overcast);
+    const ambientStrength = lerp(0.11, 0.2, daylight) * lerp(1, 1.5, state.overcast);
     this.ambient.intensity = ambientStrength;
     this.ambient.color.setRGB(
       lerp(0.10, 0.62, daylight),
@@ -412,7 +412,7 @@ export class Sky {
     scene.environment = this.envRenderTarget.texture;
     // The dome is genuinely bright in linear terms, so this multiplier is the
     // main calibration knob for how strongly the sky lights the land.
-    scene.environmentIntensity = lerp(0.16, 0.75, clamp01(1 - this.night)) * lerp(1, 1.3, state.overcast);
+    scene.environmentIntensity = lerp(0.34, 0.75, clamp01(1 - this.night)) * lerp(1, 1.3, state.overcast);
     previous?.dispose();
 
     void renderer;

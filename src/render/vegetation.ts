@@ -334,7 +334,12 @@ export class Vegetation {
       || species.group === 'flower' || species.group === 'ground';
     if (leafy || material.transparent || material.alphaTest > 0 || material.alphaMap) {
       material.transparent = false;
-      material.alphaTest = 0.42;
+      // A low cutoff on purpose. Conifer needles are thin cards whose alpha
+      // texture is soft at the edges, and at 0.42 the mipmapped edges fall
+      // below the threshold and vanish — a silver fir ends up a bare pole with
+      // a few green specks. Down here the needles survive, at the cost of a
+      // slightly fuzzier silhouette up close.
+      material.alphaTest = species.group === 'canopy' ? 0.18 : 0.35;
       material.side = THREE.DoubleSide;
       material.depthWrite = true;
     }

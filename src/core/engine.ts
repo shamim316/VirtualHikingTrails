@@ -355,7 +355,9 @@ export class Engine {
 
     const night = this.sky.night;
     // Open up at night, but not so far that it stops reading as night.
-    const targetExposure = lerp(0.22, 0.85, night) * lerp(1, 0.86, w.overcast);
+    // Night opens up a long way. A moonlit wood really is this dark, but the
+    // point of the game is to walk in it, and squinting is not restful.
+    const targetExposure = lerp(0.22, 1.25, night) * lerp(1, 0.86, w.overcast);
     this.renderer.toneMappingExposure = damp(this.renderer.toneMappingExposure, targetExposure, 1.2, dt);
   }
 

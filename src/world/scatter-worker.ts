@@ -179,8 +179,10 @@ function buildCell(req: ScatterRequest): { msg: ScatterReady; transfer: Transfer
 
       out.push(
         x,
-        // Sink slightly so nothing appears to hover over uneven ground.
-        ground - scale * 0.02,
+        // Sink into the ground. Rocks especially: they are modelled as whole
+        // boulders, and on a slope a boulder resting exactly on the surface
+        // point under its centre visibly floats on its downhill side.
+        ground - scale * (spec.group === 'rock' ? 0.14 : 0.03),
         z,
         rng.next() * Math.PI * 2,
         scale,

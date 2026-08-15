@@ -89,6 +89,7 @@ await page.evaluate((tier) => window.hiking.applyTier(tier), TIER);
 if ('forest' in args) {
   // Relocate to somewhere genuinely wooded. Looking at a bare hillside tells
   // you nothing about whether the forest works.
+  await page.evaluate((c) => { window.__wantConifer = c; }, 'conifer' in args);
   const where = await page.evaluate(() => {
     const engine = window.hiking;
     const field = engine.terrain.field;
@@ -100,14 +101,17 @@ if ('forest' in args) {
       const z = Math.sin(angle) * radius;
       const s = field.sample(x, z);
       if (s.slope > 0.28 || s.waterHeight > s.height) continue;
+      // Biome 2 is Conifer; pass --conifer to look for a fir and pine wood
+      // rather than whatever broadleaf stand happens to be nearest.
+      if (window.__wantConifer && s.biome !== 2) continue;
       const score = s.canopy * 4 - s.slope * 2 - radius * 0.0008;
-      if (!best || score > best.score) best = { x, z, score, canopy: s.canopy, h: s.height };
+      if (!best || score > best.score) best = { x, z, score, canopy: s.canopy, h: s.height, biome: s.biome };
     }
     if (!best) return null;
     engine.player.placeAt(best.x, best.z, 0.6);
     return best;
   });
-  console.log(where ? `forest spot (${where.x.toFixed(0)}, ${where.z.toFixed(0)}) canopy=${where.canopy.toFixed(2)} h=${where.h.toFixed(0)}m` : 'no forest found');
+  console.log(where ? `forest spot (${where.x.toFixed(0)}, ${where.z.toFixed(0)}) canopy=${where.canopy.toFixed(2)} h=${where.h.toFixed(0)}m biome=${where.biome}` : 'no forest found');
 }
 
 if (WALK > 0) {
@@ -126,16 +130,21 @@ if (WALK > 0) {
   }, WALK);
 }
 
+if (args.pitch) {
+  await page.evaluate((p) => { window.hiking.player.state.pitch = Number(p); }, args.pitch);
+}
+
 console.log(`settling ${SETTLE}s for terrain streaming...`);
 await waitForQuiet(page, SETTLE);
 
 const report = [];
 for (const hour of HOURS) {
-  await page.evaluate((h) => {
+  await page.evaluate(([h, p]) => {
     const engine = window.hiking;
     engine.weather.setHour(h);
     engine.weather.timeRunning = false;
-  }, hour);
+    if (p !== null) engine.player.state.pitch = Number(p);
+  }, [hour, args.pitch ?? null]);
   // Let the sky's environment capture and the exposure ease settle.
   await page.waitForTimeout(2500);
 
