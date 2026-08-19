@@ -57,8 +57,11 @@ const PRESETS: Record<QualityTier, Omit<QualitySettings, 'tier'>> = {
     ambientOcclusion: false,
     volumetricClouds: false,
     cloudScale: 4,
+    // The low tier skips the post chain outright. Even bloom alone costs an
+    // extra half-float target the size of the screen plus a five-level blur
+    // pyramid, and on the device that needs this tier that is the frame.
     godRays: false,
-    bloom: true,
+    bloom: false,
     depthOfField: false,
     waterReflections: false,
     antialias: 'fxaa',

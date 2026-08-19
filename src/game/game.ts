@@ -21,7 +21,7 @@ import { SPECIES } from './species';
 import * as storage from '../core/storage';
 import { createSample, type TerrainSample } from '../world/heightfield';
 import type { QualityTier } from '../core/quality';
-import { clamp01, damp, lerp } from '../world/noise';
+import { clamp01, damp, lerp, smoothstep } from '../world/noise';
 
 /** How often the audio re-measures the ground and the water, in seconds. */
 const TERRAIN_POLL = 0.25;
@@ -252,6 +252,24 @@ export class Game {
 
     this.modes.update(dt);
     const visuals = this.modes.visuals;
+
+    // Depth of field. Almost nothing while you walk, because a walking
+    // simulator that blurs the middle distance is a walking simulator you
+    // cannot see out of; it comes in as you sit down, and photo mode maps it
+    // to the focal length, since a long lens is what a shallow one *is*.
+    const post = engine.postState;
+    if (this.modes.isResting) {
+      post.defocus = this.modes.restDepth() * 0.5;
+      // Far enough to keep the near ground sharp: sitting down, what softens
+      // is the hillside opposite, not the moss by your boot.
+      post.focusDistance = 22;
+    } else if (this.modes.isPhoto) {
+      post.defocus = 0.25 + smoothstep(50, 135, this.modes.photoFocal) * 0.7;
+      post.focusDistance = lerp(6, 30, smoothstep(24, 135, this.modes.photoFocal));
+    } else {
+      post.defocus = damp(post.defocus, 0, 3, dt);
+      post.focusDistance = 0;
+    }
 
     // Field of view. Resting narrows very slightly — the visual equivalent of
     // your shoulders dropping — and photo mode maps the focal-length slider.

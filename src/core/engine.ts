@@ -16,6 +16,7 @@ import { createTerrainMaterial, type TerrainMaterial } from '../render/terrain-m
 import { createWaterMaterial, type WaterMaterial } from '../render/water-material';
 import { createProceduralGround, loadGroundTextures, type GroundTextures } from '../render/textures';
 import { Vegetation } from '../render/vegetation';
+import { Post, type PostState } from '../render/post';
 import { Terrain } from '../world/terrain';
 import { Weather } from '../world/weather';
 import { clamp01, damp, lerp } from '../world/noise';
@@ -49,6 +50,7 @@ export class Engine {
   readonly vegetation: Vegetation;
   readonly sky: Sky;
   readonly weather: Weather;
+  readonly post: Post;
   readonly seed: number;
   readonly worldName: string;
 
@@ -73,6 +75,26 @@ export class Engine {
   private fpsFrames = 0;
   private resizeObserver: ResizeObserver | null = null;
   private fogDensity = 0.00035;
+  /** Exposure lives here rather than on the renderer: with post-processing on,
+   *  the tonemap happens in the composite and the renderer never sees it. */
+  private exposure = 1;
+  private worldDrawCalls = 0;
+  private worldTriangles = 0;
+
+  /**
+   * What the post chain needs from the world each frame. The caller fills in
+   * the focus and defocus, which are the player's business rather than the
+   * world's — resting and photographing are what soften a frame.
+   */
+  readonly postState: PostState = {
+    sunDirection: new THREE.Vector3(0, 1, 0),
+    night: 0,
+    haze: 0,
+    exposure: 1,
+    focusDistance: 0,
+    defocus: 0,
+    vignette: 0,
+  };
 
   constructor(opts: EngineOptions) {
     this.seed = opts.seed >>> 0;
@@ -102,6 +124,8 @@ export class Engine {
     // near slopes don't balloon into the frame the way a 90° lens makes them.
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, this.settings.viewDistance * 1.6);
     this.camera.rotation.order = 'YXZ';
+
+    this.post = new Post(this.renderer, this.settings);
 
     this.sky = new Sky(this.renderer);
     this.scene.add(this.sky.mesh);
@@ -179,6 +203,7 @@ export class Engine {
     this.camera.far = this.settings.viewDistance * 1.6;
     this.camera.updateProjectionMatrix();
     this.terrain.setViewDistance(this.settings.viewDistance);
+    this.post.applySettings(this.settings);
     this.renderer.shadowMap.enabled = this.settings.shadows;
     this.configureShadows();
     this.handleResize();
@@ -225,6 +250,8 @@ export class Engine {
 
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
+
+    this.post.setSize(width, height, pixelRatio);
   };
 
   start() {
@@ -313,12 +340,41 @@ export class Engine {
 
     this.onUpdate?.(dt, this.elapsed);
 
-    this.renderer.render(this.scene, this.camera);
+    // --- render --------------------------------------------------------------
+    // With the post chain on, the world is rendered with tone mapping *off*
+    // into a half-float target so that bloom and light shafts see real
+    // radiances; AgX is applied once at the end of the composite. Without it,
+    // the renderer tone maps as it always did.
+    if (this.post.enabled) {
+      const state = this.postState;
+      state.sunDirection.copy(this.sky.sunDirection);
+      state.night = this.sky.night;
+      state.haze = this.weather.state.haze;
+      state.exposure = this.exposure;
+
+      this.renderer.toneMapping = THREE.NoToneMapping;
+      this.renderer.toneMappingExposure = 1;
+      this.renderer.setRenderTarget(this.post.renderTarget);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
+      this.worldDrawCalls = this.renderer.info.render.calls;
+      this.worldTriangles = this.renderer.info.render.triangles;
+      this.post.render(this.camera, state, dt);
+    } else {
+      this.renderer.toneMapping = THREE.AgXToneMapping;
+      this.renderer.toneMappingExposure = this.exposure;
+      this.renderer.setRenderTarget(null);
+      this.renderer.render(this.scene, this.camera);
+      this.worldDrawCalls = this.renderer.info.render.calls;
+      this.worldTriangles = this.renderer.info.render.triangles;
+    }
 
     // --- stats ---------------------------------------------------------------
-    const info = this.renderer.info.render;
-    this.stats.drawCalls = info.calls;
-    this.stats.triangles = info.triangles;
+    // Captured from the world render, not from whatever ran last: with the post
+    // chain on, the final call is a fullscreen quad and the readout would say
+    // the game draws one triangle.
+    this.stats.drawCalls = this.worldDrawCalls;
+    this.stats.triangles = this.worldTriangles;
     this.stats.chunks = this.terrain.chunkCount;
     this.stats.pending = this.terrain.pendingCount;
     this.stats.plants = this.vegetation.instanceCount;
@@ -364,7 +420,7 @@ export class Engine {
     // Night opens up a long way. A moonlit wood really is this dark, but the
     // point of the game is to walk in it, and squinting is not restful.
     const targetExposure = lerp(0.22, 1.25, night) * lerp(1, 0.86, w.overcast);
-    this.renderer.toneMappingExposure = damp(this.renderer.toneMappingExposure, targetExposure, 1.2, dt);
+    this.exposure = damp(this.exposure, targetExposure, 1.2, dt);
   }
 
   dispose() {
@@ -373,6 +429,7 @@ export class Engine {
     window.removeEventListener('orientationchange', this.handleResize);
     this.resizeObserver?.disconnect();
     this.input.dispose();
+    this.post.dispose();
     this.vegetation.dispose();
     this.terrain.dispose();
     this.sky.dispose();

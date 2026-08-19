@@ -218,6 +218,18 @@ if ('photo' in args) await page.evaluate(() => window.game.modes.set('photo'));
 if ('journal' in args) await page.evaluate(() => window.game.ui.toggleJournal(window.game.discovery, []));
 if ('settings' in args) await page.evaluate(() => window.game.ui.openSettings());
 
+if ('sun' in args) {
+  // Turn to face the sun. God rays only exist when it is in frame, so a
+  // screenshot of them taken on an arbitrary bearing proves nothing.
+  await page.evaluate(() => {
+    const engine = window.hiking;
+    const d = engine.sky.sunDirection;
+    const p = engine.player.state;
+    engine.player.placeAt(p.position.x, p.position.z, Math.atan2(-d.x, -d.z));
+    p.pitch = Math.max(0.05, Math.asin(Math.min(0.9, d.y)) * 0.75);
+  });
+}
+
 if (args.pitch) {
   await page.evaluate((p) => { window.hiking.player.state.pitch = Number(p); }, args.pitch);
 }
@@ -239,7 +251,7 @@ for (const hour of HOURS) {
   await page.waitForTimeout(Number(args.ease ?? 9000));
 
   const stats = await page.evaluate(() => ({ ...window.hiking.stats }));
-  const mode = ['rest', 'photo', 'journal', 'settings', 'splash', 'water', 'waterfall'].find((m) => m in args);
+  const mode = ['rest', 'photo', 'journal', 'settings', 'splash', 'water', 'waterfall', 'sun'].find((m) => m in args);
   const label =
     `${MOBILE ? 'mobile-' : ''}${mode ? `${mode}-` : ''}` +
     `${args.weather ? `${args.weather}-` : ''}h${String(hour).replace('.', '_')}`;
