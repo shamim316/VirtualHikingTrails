@@ -54,6 +54,16 @@ and falls away behind you. Birds are real Wikimedia Commons recordings fired as
 spatialised one-shots, with a dawn chorus, a quiet afternoon, owls after dark
 and corvids above the treeline.
 
+**Post-processing is hand-rolled** (`src/render/post.ts`) rather than assembled
+from `EffectComposer`, because three tone maps inside every material's shader —
+so an ordinary render arrives already compressed, and bloom on display-range
+values is a different effect from bloom on real radiances. The world renders
+with tone mapping off into a half-float target, bloom, light shafts and depth
+of field all work in linear, and AgX is applied once at the end. Light shafts
+march a depth mask rather than scene colour: the sky dome sits at the far
+plane, so one compare is the whole occlusion test, and it is exactly the canopy
+you are standing under.
+
 **Discovery is about looking, not walking.** Something counts when it is near
 enough to make out, inside the cone you are actually facing, and not hidden
 behind a hill. Because a fir six metres away is thirty metres of tree, the test
