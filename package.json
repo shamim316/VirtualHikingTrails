@@ -16,7 +16,9 @@
     "size": "node tools/size-report.mjs",
     "deploy": "npm run build && npx wrangler deploy",
     "walk": "node tools/walk-test.mjs",
-    "shoot": "node tools/shoot.mjs"
+    "shoot": "node tools/shoot.mjs",
+    "perf": "node tools/perf-census.mjs",
+    "preview:model": "node tools/model-preview.mjs"
   },
   "dependencies": {
     "three": "^0.180.0"

@@ -304,7 +304,11 @@ function budgetSplit(document, budget) {
     }
   }
   if (foliage === 0) return { foliage: 0, solid: budget };
-  const solidBudget = Math.min(solid, Math.max(2500, Math.round(budget * 0.1)));
+  // The floor must never exceed the model's own budget, or a small asset can
+  // be handed more triangles than it was allotted: `stone` asked for 500 and
+  // the flat 2500 floor gave it 2500, which is how a pebble ended up costing
+  // more than a fir.
+  const solidBudget = Math.min(solid, Math.max(Math.min(2500, budget), Math.round(budget * 0.1)));
   return { foliage: Math.max(1000, budget - solidBudget), solid: solidBudget };
 }
 

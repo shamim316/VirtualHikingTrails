@@ -17,6 +17,7 @@ import { createWaterMaterial, type WaterMaterial } from '../render/water-materia
 import { createProceduralGround, loadGroundTextures, type GroundTextures } from '../render/textures';
 import { Vegetation } from '../render/vegetation';
 import { Post, type PostState } from '../render/post';
+import { Spray } from '../render/spray';
 import { Terrain } from '../world/terrain';
 import { Weather } from '../world/weather';
 import { clamp01, damp, lerp } from '../world/noise';
@@ -51,6 +52,7 @@ export class Engine {
   readonly sky: Sky;
   readonly weather: Weather;
   readonly post: Post;
+  readonly spray: Spray;
   readonly seed: number;
   readonly worldName: string;
 
@@ -160,6 +162,9 @@ export class Engine {
     });
     this.scene.add(this.vegetation.group);
 
+    this.spray = new Spray(this.terrain.field);
+    this.scene.add(this.spray.group);
+
     this.player = new PlayerController(this.terrain.field);
     const start = this.player.findStart(0, 0);
     this.player.placeAt(start.x, start.z, start.yaw);
@@ -171,6 +176,7 @@ export class Engine {
       (t) => this.applyTier(t)
     );
 
+    this.spray.enabled = this.settings.shadows;
     this.configureShadows();
     this.handleResize();
 
@@ -204,7 +210,10 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.terrain.setViewDistance(this.settings.viewDistance);
     this.post.applySettings(this.settings);
+    // Spray is pure overdraw; the tier that turns off shadows cannot pay for it.
+    this.spray.enabled = this.settings.shadows;
     this.renderer.shadowMap.enabled = this.settings.shadows;
+    this.spray.enabled = this.settings.shadows;
     this.configureShadows();
     this.handleResize();
   }
@@ -331,6 +340,20 @@ export class Engine {
       gust: wind.gust * (0.35 + wind.wind),
     });
 
+    // Spray after the water it comes off, and before the render: it reads the
+    // same wind the canopy does, so a gust moves the mist and the leaves
+    // together.
+    this.spray.update(
+      this.camera,
+      this.elapsed,
+      { x: Math.cos(wind.windDirection), z: Math.sin(wind.windDirection), gust: wind.gust },
+      {
+        sky: this.sky.horizonColor,
+        sun: this.sky.sunLight.color,
+        daylight: 1 - this.sky.night,
+      }
+    );
+
     const u = this.waterMaterial.userData.uniforms;
     u.uTime.value = this.elapsed;
     u.uSunDir.value.copy(this.sky.sunDirection);
@@ -430,6 +453,7 @@ export class Engine {
     this.resizeObserver?.disconnect();
     this.input.dispose();
     this.post.dispose();
+    this.spray.dispose();
     this.vegetation.dispose();
     this.terrain.dispose();
     this.sky.dispose();

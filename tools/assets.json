@@ -88,7 +88,7 @@
       "id": "fir_seedling",
       "slug": "fir_sapling",
       "res": "1k",
-      "tris": 18000,
+      "tris": 7000,
       "group": "understory"
     },
     {
@@ -130,35 +130,35 @@
       "id": "fern",
       "slug": "fern_02",
       "res": "1k",
-      "tris": 3000,
+      "tris": 1600,
       "group": "understory"
     },
     {
       "id": "shrub_a",
       "slug": "shrub_01",
       "res": "1k",
-      "tris": 8000,
+      "tris": 1400,
       "group": "understory"
     },
     {
       "id": "shrub_b",
       "slug": "shrub_02",
       "res": "1k",
-      "tris": 5000,
+      "tris": 1400,
       "group": "understory"
     },
     {
       "id": "shrub_c",
       "slug": "shrub_03",
       "res": "1k",
-      "tris": 4000,
+      "tris": 1200,
       "group": "understory"
     },
     {
       "id": "shrub_d",
       "slug": "shrub_04",
       "res": "1k",
-      "tris": 5000,
+      "tris": 1200,
       "group": "understory"
     },
     {
@@ -228,7 +228,7 @@
       "id": "heliophila",
       "slug": "flower_heliophila",
       "res": "1k",
-      "tris": 2500,
+      "tris": 1200,
       "group": "flower"
     },
     {
@@ -270,14 +270,14 @@
       "id": "rock_a",
       "slug": "rock_07",
       "res": "1k",
-      "tris": 2500,
+      "tris": 900,
       "group": "rock"
     },
     {
       "id": "rock_b",
       "slug": "rock_09",
       "res": "1k",
-      "tris": 2500,
+      "tris": 900,
       "group": "rock"
     },
     {
@@ -305,7 +305,7 @@
       "id": "stone",
       "slug": "stone_01",
       "res": "1k",
-      "tris": 1500,
+      "tris": 500,
       "group": "rock"
     },
     {

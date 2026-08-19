@@ -101,11 +101,51 @@ function buildChunk(req: ChunkRequest): { msg: ChunkReady; transfer: Transferabl
       normals[v * 3 + 2] = nz;
 
       const slope = Math.max(0, Math.min(1, 1 - ny));
-      hf.surfaceWeights(originX + i * step, originZ + j * step, h, slope, gridRiverT[gi], weights);
+      const riverT = gridRiverT[gi];
+      hf.surfaceWeights(originX + i * step, originZ + j * step, h, slope, riverT, weights);
+
+      // Wet rock, decided here rather than in `surfaceWeights` because this is
+      // the one place that already holds both the ground and the water grids.
+      //
+      // The field-based term the heightfield returns follows the *stream
+      // channel*, which leaves a lake shore bone dry — a lake is not a river
+      // and has no channel field at all. What actually makes stone dark is
+      // being at or just above the waterline, whatever put the water there.
+      // Wetness has to be dilated across the grid, not read at the vertex.
+      //
+      // Measured: a mountain beck here is about a metre wide, and a terrain
+      // vertex is one to eight metres from its neighbour depending on the LOD.
+      // So the water is narrower than the mesh, only the odd vertex lands in
+      // it, and per-vertex wetness interpolates away to nothing across the
+      // triangle. Spreading it from whichever grid cells *did* catch water
+      // gives a band several metres wide, which is both visible and what a
+      // streambank actually looks like.
+      let wet = weights.wet;
+      const radius = Math.max(1, Math.min(3, Math.round(5 / step)));
+      const band = 0.5 + slope * 4.0;
+      for (let dj = -radius; dj <= radius; dj++) {
+        for (let di = -radius; di <= radius; di++) {
+          const ni = Math.max(0, Math.min(NB - 1, i + 1 + di));
+          const nj = Math.max(0, Math.min(NB - 1, j + 1 + dj));
+          const n = nj * NB + ni;
+          const water = gridW[n];
+          if (water === -Infinity && gridRiverT[n] <= 0) continue;
+
+          // Falls off over the dilation radius, so the band fades into dry
+          // ground rather than ending at a line.
+          const falloff = 1 - Math.hypot(di, dj) / (radius + 1);
+          const above = water === -Infinity
+            ? 0
+            : Math.max(0, Math.min(1, (band - (h - water)) / band));
+          const channel = Math.min(1, gridRiverT[n] * 1.6);
+          wet = Math.max(wet, Math.max(above, channel) * falloff);
+        }
+      }
+
       surface[v * 4] = (weights.rock * 255) | 0;
       surface[v * 4 + 1] = (weights.snow * 255) | 0;
       surface[v * 4 + 2] = (weights.canopy * 255) | 0;
-      surface[v * 4 + 3] = (weights.wet * 255) | 0;
+      surface[v * 4 + 3] = (wet * 255) | 0;
     }
   }
 

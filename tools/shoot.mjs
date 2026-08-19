@@ -188,7 +188,13 @@ if ('water' in args) {
 
     const yaw = Math.atan2(-(best.x - bank.px), -(best.z - bank.pz));
     engine.player.placeAt(bank.px, bank.pz, yaw);
-    return { ...best, ...bank };
+    // Aim at the water, not at the horizon. A fall found on a steep face is
+    // usually well below the bank you can stand on, and a level camera puts it
+    // out of frame entirely.
+    const horizontal = Math.hypot(best.x - bank.px, best.z - bank.pz);
+    const drop = bank.h + 1.7 - field.height(best.x, best.z);
+    engine.player.state.pitch = -Math.atan2(drop, Math.max(1, horizontal));
+    return { ...best, ...bank, pitch: engine.player.state.pitch };
   }, 'waterfall' in args);
   console.log(where
     ? `bank at (${where.px.toFixed(0)}, ${where.pz.toFixed(0)}) ${where.h.toFixed(0)}m, ` +

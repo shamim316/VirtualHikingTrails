@@ -64,6 +64,15 @@ march a depth mask rather than scene colour: the sky dome sits at the far
 plane, so one compare is the whole occlusion test, and it is exactly the canopy
 you are standing under.
 
+**Spray and wet rock.** Where fast water crosses a steep face — the same test
+the journal uses to name a waterfall — a cloud of billboards lives entirely in
+the vertex shader: an origin, a seed and a looping lifetime, so there is no
+per-frame CPU cost when the nearest fall is four hundred metres behind you.
+Wet ground is dilated across the terrain grid rather than sampled per vertex,
+because a mountain beck is about a metre wide and a terrain vertex is one to
+eight metres from its neighbour: read at the vertex, the water is narrower than
+the mesh and the wetness interpolates away to nothing.
+
 **Discovery is about looking, not walking.** Something counts when it is near
 enough to make out, inside the cone you are actually facing, and not hidden
 behind a hill. Because a fir six metres away is thirty metres of tree, the test
@@ -96,7 +105,15 @@ node tools/shoot.mjs --forest --hours 6.4,9.5,13,18.6,22
 node tools/shoot.mjs --mobile --hours 8
 node tools/shoot.mjs --forest --rest        # also --photo, --journal, --settings
 node tools/map-preview.mjs --seed 12345
+node tools/model-preview.mjs fir_tree pine_tree --eye   # one asset, on a grid
+node tools/perf-census.mjs                              # triangles per species
 ```
+
+`perf-census.mjs` is the one to run on real hardware. Draw calls and a triangle
+total tell you there is a problem; only a per-species breakdown tells you which
+asset caused it. Its first run found a 0.4-metre shrub costing seven million
+triangles a frame, a third of the whole picture, because its budget was eight
+thousand triangles an instance and eight hundred were on screen.
 
 Under SwiftShader the frame rate in those reports is meaningless; the draw
 call, triangle and chunk counts are not.
