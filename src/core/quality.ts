@@ -57,14 +57,16 @@ const PRESETS: Record<QualityTier, Omit<QualitySettings, 'tier'>> = {
     ambientOcclusion: false,
     volumetricClouds: false,
     cloudScale: 4,
-    // The low tier skips the post chain outright. Even bloom alone costs an
+    // The low tier skips the post chain outright, antialiasing included:
+    // FXAA needs the composited frame in a texture, so switching it on here
+    // would reinstate the very chain this tier exists to avoid. Even bloom alone costs an
     // extra half-float target the size of the screen plus a five-level blur
     // pyramid, and on the device that needs this tier that is the frame.
     godRays: false,
     bloom: false,
     depthOfField: false,
     waterReflections: false,
-    antialias: 'fxaa',
+    antialias: 'none',
     workers: 1,
   },
   medium: {

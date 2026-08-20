@@ -395,6 +395,76 @@ void main() {
 }
 `;
 
+
+/**
+ * FXAA, the console-era luma edge blur.
+ *
+ * Necessary because the post chain gives up MSAA: multisampling and a depth
+ * texture do not coexist happily, and the effects need the depth. Alpha-tested
+ * foliage is the worst possible content for that — a canopy is thousands of
+ * hard cutout edges, and untouched they crawl as you walk, which on a game
+ * whose whole purpose is to be restful is the single most irritating thing in
+ * the frame.
+ *
+ * The reduced form: find the luma gradient across a pixel's neighbours, step
+ * along it, and blend. It softens genuine detail slightly. On a canopy that is
+ * a trade worth making every time.
+ */
+const FXAA_FRAG = /* glsl */ `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D tSource;
+uniform vec2 uTexel;
+
+const float SPAN_MAX = 8.0;
+const float REDUCE_MUL = 1.0 / 8.0;
+const float REDUCE_MIN = 1.0 / 128.0;
+
+float luma(vec3 c) {
+  return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+void main() {
+  vec3 rgbM = texture2D(tSource, vUv).rgb;
+  vec3 rgbNW = texture2D(tSource, vUv + vec2(-1.0, -1.0) * uTexel).rgb;
+  vec3 rgbNE = texture2D(tSource, vUv + vec2( 1.0, -1.0) * uTexel).rgb;
+  vec3 rgbSW = texture2D(tSource, vUv + vec2(-1.0,  1.0) * uTexel).rgb;
+  vec3 rgbSE = texture2D(tSource, vUv + vec2( 1.0,  1.0) * uTexel).rgb;
+
+  float lumaM = luma(rgbM);
+  float lumaNW = luma(rgbNW);
+  float lumaNE = luma(rgbNE);
+  float lumaSW = luma(rgbSW);
+  float lumaSE = luma(rgbSE);
+
+  float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
+  float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+
+  vec2 dir = vec2(
+    -((lumaNW + lumaNE) - (lumaSW + lumaSE)),
+     ((lumaNW + lumaSW) - (lumaNE + lumaSE))
+  );
+
+  float reduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 0.25 * REDUCE_MUL, REDUCE_MIN);
+  float scale = 1.0 / (min(abs(dir.x), abs(dir.y)) + reduce);
+  dir = clamp(dir * scale, vec2(-SPAN_MAX), vec2(SPAN_MAX)) * uTexel;
+
+  vec3 rgbA = 0.5 * (
+    texture2D(tSource, vUv + dir * (1.0 / 3.0 - 0.5)).rgb +
+    texture2D(tSource, vUv + dir * (2.0 / 3.0 - 0.5)).rgb
+  );
+  vec3 rgbB = rgbA * 0.5 + 0.25 * (
+    texture2D(tSource, vUv - dir * 0.5).rgb +
+    texture2D(tSource, vUv + dir * 0.5).rgb
+  );
+
+  // The wider blend overshoots on a hard edge; fall back to the tight one when
+  // it strays outside the neighbourhood's own range.
+  float lumaB = luma(rgbB);
+  gl_FragColor = vec4((lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB, 1.0);
+}
+`;
+
 function makeTarget(width: number, height: number, type: THREE.TextureDataType, depth = false) {
   const target = new THREE.WebGLRenderTarget(Math.max(1, width), Math.max(1, height), {
     type,
@@ -427,6 +497,8 @@ export class Post {
   private bloomChain: THREE.WebGLRenderTarget[] = [];
   private rays: THREE.WebGLRenderTarget;
   private blur: THREE.WebGLRenderTarget;
+  /** Holds the composited LDR frame when FXAA is going to run over it. */
+  private ldr: THREE.WebGLRenderTarget;
 
   private bright: THREE.RawShaderMaterial;
   private down: THREE.RawShaderMaterial;
@@ -434,6 +506,7 @@ export class Post {
   private godray: THREE.RawShaderMaterial;
   private dof: THREE.RawShaderMaterial;
   private composite: THREE.RawShaderMaterial;
+  private fxaa: THREE.RawShaderMaterial;
 
   private width = 1;
   private height = 1;
@@ -449,6 +522,9 @@ export class Post {
     this.scene = makeTarget(1, 1, half, true);
     this.rays = makeTarget(1, 1, half);
     this.blur = makeTarget(1, 1, half);
+    // Eight bits, not half float: FXAA runs after the tonemap, on the same
+    // values the display will get.
+    this.ldr = makeTarget(1, 1, THREE.UnsignedByteType);
     for (let i = 0; i < BLOOM_LEVELS; i++) this.bloomChain.push(makeTarget(1, 1, half));
 
     const make = (fragmentShader: string, uniforms: Record<string, THREE.IUniform>) =>
@@ -516,6 +592,11 @@ export class Post {
       uTime: { value: 0 },
     });
 
+    this.fxaa = make(FXAA_FRAG, {
+      tSource: { value: null },
+      uTexel: { value: new THREE.Vector2() },
+    });
+
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.bright);
     this.quad.frustumCulled = false;
     this.quadScene.add(this.quad);
@@ -524,20 +605,27 @@ export class Post {
   }
 
   applySettings(settings: QualitySettings) {
-    this.enabled = settings.bloom || settings.godRays || settings.depthOfField;
     this.composite.uniforms.uBloomStrength.value = settings.bloom ? 0.09 : 0;
     this.rayBudget = settings.godRays;
     this.dofBudget = settings.depthOfField;
+    // SMAA is not implemented; the tiers that ask for it get FXAA, which is
+    // the honest thing to give them rather than silently nothing.
+    this.antialias = settings.antialias !== 'none';
+    // Antialiasing alone is reason enough to run the chain: without MSAA, a
+    // canopy of alpha-tested cutouts crawls.
+    this.enabled = settings.bloom || settings.godRays || settings.depthOfField || this.antialias;
   }
 
   private rayBudget = true;
   private dofBudget = true;
+  private antialias = true;
 
   setSize(width: number, height: number, pixelRatio: number) {
     this.width = Math.max(1, Math.floor(width * pixelRatio));
     this.height = Math.max(1, Math.floor(height * pixelRatio));
 
     this.scene.setSize(this.width, this.height);
+    this.ldr.setSize(this.width, this.height);
     // Shafts are enormous and soft; a quarter of the resolution is free and
     // nobody has ever noticed. Depth of field is half, where the softness of
     // the source would otherwise start to show at the focus boundary.
@@ -666,7 +754,14 @@ export class Post {
     u.uVignette.value = 0.18 + state.vignette * 0.55;
     u.uTime.value = this.elapsed;
 
-    this.blit(this.composite, null);
+    if (this.antialias) {
+      this.blit(this.composite, this.ldr);
+      this.fxaa.uniforms.tSource.value = this.ldr.texture;
+      (this.fxaa.uniforms.uTexel.value as THREE.Vector2).set(1 / this.width, 1 / this.height);
+      this.blit(this.fxaa, null);
+    } else {
+      this.blit(this.composite, null);
+    }
 
     renderer.autoClear = previousAutoClear;
     renderer.setRenderTarget(null);
@@ -677,9 +772,10 @@ export class Post {
     this.scene.depthTexture?.dispose();
     this.rays.dispose();
     this.blur.dispose();
+    this.ldr.dispose();
     for (const target of this.bloomChain) target.dispose();
     this.quad.geometry.dispose();
-    for (const material of [this.bright, this.down, this.up, this.godray, this.dof, this.composite]) {
+    for (const material of [this.bright, this.down, this.up, this.godray, this.dof, this.composite, this.fxaa]) {
       material.dispose();
     }
   }

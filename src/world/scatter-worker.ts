@@ -177,12 +177,21 @@ function buildCell(req: ScatterRequest): { msg: ScatterReady; transfer: Transfer
       // Plants lean away from the slope a little, and rocks sit into it.
       const tilt = spec.group === 'rock' ? slope * 0.9 : slope * 0.35;
 
+      // Sink into the ground, deeper on steeper ground.
+      //
+      // A boulder resting exactly on the surface point under its centre
+      // visibly floats on its downhill side, and the gap grows with the slope:
+      // on a twenty-seven degree hillside a two-metre boulder hangs half a
+      // metre clear of the ground at its lower edge. A flat 14% was enough on
+      // the level and nowhere near enough beside a mountain stream, which is
+      // exactly where the rocks are.
+      const sink = spec.group === 'rock'
+        ? scale * (0.14 + slope * 0.55)
+        : scale * (0.03 + slope * 0.12);
+
       out.push(
         x,
-        // Sink into the ground. Rocks especially: they are modelled as whole
-        // boulders, and on a slope a boulder resting exactly on the surface
-        // point under its centre visibly floats on its downhill side.
-        ground - scale * (spec.group === 'rock' ? 0.14 : 0.03),
+        ground - sink,
         z,
         rng.next() * Math.PI * 2,
         scale,

@@ -62,7 +62,9 @@ with tone mapping off into a half-float target, bloom, light shafts and depth
 of field all work in linear, and AgX is applied once at the end. Light shafts
 march a depth mask rather than scene colour: the sky dome sits at the far
 plane, so one compare is the whole occlusion test, and it is exactly the canopy
-you are standing under.
+you are standing under. FXAA closes the chain, because multisampling and a
+depth texture do not coexist and the effects need the depth — and a canopy of
+alpha-tested cutouts is the worst possible content to leave unfiltered.
 
 **Spray and wet rock.** Where fast water crosses a steep face — the same test
 the journal uses to name a waterfall — a cloud of billboards lives entirely in
