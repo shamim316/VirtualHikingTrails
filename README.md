@@ -144,6 +144,19 @@ database, no network calls after load. Anything that can serve files can host
 it. `wrangler.toml` is configured for **Cloudflare Workers static assets**,
 which is what Cloudflare recommends for new projects.
 
+The custom domain lives in `wrangler.toml`:
+
+```toml
+[[routes]]
+pattern = "hiking.akhtar.app"
+custom_domain = true
+```
+
+Cloudflare creates the DNS record and issues the certificate itself. Two things
+must be true or the deploy fails with a clear error: the zone must be active on
+the same Cloudflare account, and there must be no existing CNAME at that
+hostname — a Custom Domain cannot take one over.
+
 ### From a connected GitHub repository
 
 The asset directory is committed, so a Git-sourced build needs nothing extra.

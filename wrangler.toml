@@ -16,6 +16,18 @@
 name = "virtual-hiking-trails"
 compatibility_date = "2025-01-01"
 
+# The custom domain, declared here rather than clicked in the dashboard so that
+# the deploy is reproducible and the hostname is in version control.
+#
+# Cloudflare creates the DNS record and issues the certificate itself. Two
+# things have to be true or the deploy fails with a clear error: `akhtar.app`
+# must be an active zone on the same Cloudflare account, and there must be no
+# existing CNAME at this hostname — a Custom Domain cannot take one over, so an
+# old record has to be deleted first.
+[[routes]]
+pattern = "hiking.akhtar.app"
+custom_domain = true
+
 [assets]
 directory = "./dist"
 # Left at the default (`none`) deliberately. Single-page-application handling
