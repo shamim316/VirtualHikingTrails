@@ -109,6 +109,17 @@ node tools/shoot.mjs --forest --rest        # also --photo, --journal, --setting
 node tools/map-preview.mjs --seed 12345
 node tools/model-preview.mjs fir_tree pine_tree --eye   # one asset, on a grid
 node tools/perf-census.mjs                              # triangles per species
+node tools/serve-dist.mjs                               # dist/ with real headers
+```
+
+`serve-dist.mjs` exists because of a bug that reached the live site. `_headers`
+is a Cloudflare convention and Vite's dev server ignores it, so the
+Content-Security-Policy in it had never been exercised before deploy — and it
+forbade something the game does on every model load. Anything the policy breaks
+now breaks locally first:
+
+```
+npm run build && node tools/serve-dist.mjs   # then open localhost:4180
 ```
 
 `perf-census.mjs` is the one to run on real hardware. Draw calls and a triangle

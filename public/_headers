@@ -29,4 +29,11 @@
   # The game is entirely local: no network calls, no analytics, no third-party
   # anything. Saying so in a header means a broken build fails loudly rather
   # than quietly phoning somewhere.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'
+  #
+  # `blob:` in connect-src is not a loophole in that. three's GLTFLoader uses
+  # ImageBitmapLoader, which *fetches* the object URL it makes for each texture
+  # embedded in a .glb — so every model texture in the game is a blob: fetch.
+  # Without it the geometry loads and the textures do not, and a forest renders
+  # as white paper trees. A blob: URL can only address data this page itself
+  # created, so it reaches nothing off-origin.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; connect-src 'self' blob:; frame-ancestors 'none'; base-uri 'none'

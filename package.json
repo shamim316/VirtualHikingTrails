@@ -18,7 +18,8 @@
     "walk": "node tools/walk-test.mjs",
     "shoot": "node tools/shoot.mjs",
     "perf": "node tools/perf-census.mjs",
-    "preview:model": "node tools/model-preview.mjs"
+    "preview:model": "node tools/model-preview.mjs",
+    "serve": "npm run build && node tools/serve-dist.mjs"
   },
   "dependencies": {
     "three": "^0.180.0"
